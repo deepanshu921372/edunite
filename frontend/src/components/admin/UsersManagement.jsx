@@ -16,6 +16,7 @@ import {
 import { adminAPI } from '../../services/api';
 import LoadingSpinner from '../shared/LoadingSpinner';
 import { showToast } from '../../utils/toast';
+import toast from 'react-hot-toast';
 
 const UsersManagement = () => {
   const [users, setUsers] = useState([]);
@@ -295,7 +296,7 @@ const UsersManagement = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredUsers.map((user, index) => (
                   <motion.tr
-                    key={user.uid}
+                    key={user.uid || user._id || index}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.4, delay: index * 0.1 }}

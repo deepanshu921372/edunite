@@ -136,12 +136,50 @@ router.post('/login', async (req, res) => {
         await user.save();
       }
 
+      // Check if blocked
+      if (user.isBlocked) {
+        return res.status(403).json({
+          error: 'Account blocked',
+          message: 'You are not allowed to sign in, Please contact Admin for further proceedings.'
+        });
+      }
+
       // Check if approved (admins are always approved)
       if (!user.isApproved) {
+        // Check if user was previously rejected - allow re-submission
+        const lastRequest = await UserRequest.findOne({ userId: user._id }).sort({ requestedAt: -1 });
+
+        if (lastRequest && lastRequest.status === 'rejected') {
+          // Create new pending request for re-submission
+          const newRequest = new UserRequest({
+            userId: user._id,
+            email: user.email,
+            name: user.name,
+            requestedRole: user.role,
+            userProfile: {
+              profileImage: photoURL
+            }
+          });
+          await newRequest.save();
+          console.log(`Re-submission request created for ${user.name}`);
+        }
+
+        const userForStorage = {
+          firebaseUid: user.firebaseUid,
+          email: user.email,
+          name: user.name,
+          displayName: displayName || user.name,
+          photoURL: photoURL,
+          role: user.role,
+          isApproved: user.isApproved,
+          _id: user._id
+        };
+
         return res.status(403).json({
           error: 'Account pending approval',
-          message: 'Your account is still waiting for admin approval.',
-          user: user
+          message: 'Account pending approval. You will receive an email when your account is verified.',
+          user: user,
+          userForStorage: userForStorage
         });
       }
 

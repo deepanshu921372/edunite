@@ -38,7 +38,7 @@ const upload = multer({
 });
 
 // Get teacher dashboard stats
-router.get('/dashboard-stats', authenticateToken, requireRole(['teacher']), requireApproval, async (req, res) => {
+router.get('/stats', authenticateToken, requireRole(['teacher']), requireApproval, async (req, res) => {
   try {
     const teacherId = req.user._id;
 
@@ -96,6 +96,25 @@ router.get('/dashboard-stats', authenticateToken, requireRole(['teacher']), requ
     });
   } catch (error) {
     console.error('Teacher dashboard stats error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get teacher's assigned classes
+router.get('/classes', authenticateToken, requireRole(['teacher']), requireApproval, async (req, res) => {
+  try {
+    const teacherId = req.user._id;
+
+    const classes = await Class.find({ teacher: teacherId })
+      .populate('students', 'name email profile')
+      .sort({ name: 1 });
+
+    res.json({
+      success: true,
+      data: classes
+    });
+  } catch (error) {
+    console.error('Get teacher classes error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -158,6 +177,95 @@ router.post('/timetable', authenticateToken, requireRole(['teacher']), requireAp
     });
   } catch (error) {
     console.error('Save timetable error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get students for attendance marking
+router.get('/attendance/students', authenticateToken, requireRole(['teacher']), requireApproval, async (req, res) => {
+  try {
+    const teacherId = req.user._id;
+    const { classId, date } = req.query;
+
+    if (!classId) {
+      return res.status(400).json({ error: 'Class ID is required' });
+    }
+
+    // Verify teacher owns this class
+    const classDoc = await Class.findOne({ _id: classId, teacher: teacherId })
+      .populate('students', 'name email profile');
+
+    if (!classDoc) {
+      return res.status(403).json({ error: 'Not authorized for this class' });
+    }
+
+    // If date is provided, check if attendance already exists
+    let existingAttendance = null;
+    if (date) {
+      const attendanceDate = new Date(date);
+      existingAttendance = await Attendance.findOne({
+        class: classId,
+        teacher: teacherId,
+        date: {
+          $gte: new Date(attendanceDate.setHours(0, 0, 0, 0)),
+          $lt: new Date(attendanceDate.setHours(23, 59, 59, 999))
+        }
+      });
+    }
+
+    res.json({
+      class: {
+        _id: classDoc._id,
+        name: classDoc.name,
+        subject: classDoc.subject
+      },
+      students: classDoc.students,
+      existingAttendance
+    });
+  } catch (error) {
+    console.error('Get students for attendance error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get attendance history for a specific class
+router.get('/attendance/history', authenticateToken, requireRole(['teacher']), requireApproval, async (req, res) => {
+  try {
+    const teacherId = req.user._id;
+    const { classId, startDate, endDate } = req.query;
+
+    if (!classId) {
+      return res.status(400).json({ error: 'Class ID is required' });
+    }
+
+    // Verify teacher owns this class
+    const classDoc = await Class.findOne({ _id: classId, teacher: teacherId });
+    if (!classDoc) {
+      return res.status(403).json({ error: 'Not authorized for this class' });
+    }
+
+    const filter = {
+      class: classId,
+      teacher: teacherId
+    };
+
+    if (startDate && endDate) {
+      filter.date = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate)
+      };
+    }
+
+    const attendanceHistory = await Attendance.find(filter)
+      .populate('students.student', 'name email')
+      .sort({ date: -1 });
+
+    res.json({
+      success: true,
+      data: attendanceHistory
+    });
+  } catch (error) {
+    console.error('Get attendance history error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -278,7 +386,7 @@ router.get('/attendance', authenticateToken, requireRole(['teacher']), requireAp
 });
 
 // Upload study material
-router.post('/study-materials', authenticateToken, requireRole(['teacher']), requireApproval, upload.single('file'), async (req, res) => {
+router.post('/materials', authenticateToken, requireRole(['teacher']), requireApproval, upload.single('file'), async (req, res) => {
   try {
     const teacherId = req.user._id;
     const { title, description, classId, subject } = req.body;
@@ -327,7 +435,7 @@ router.post('/study-materials', authenticateToken, requireRole(['teacher']), req
 });
 
 // Get study materials uploaded by teacher
-router.get('/study-materials', authenticateToken, requireRole(['teacher']), requireApproval, async (req, res) => {
+router.get('/materials', authenticateToken, requireRole(['teacher']), requireApproval, async (req, res) => {
   try {
     const teacherId = req.user._id;
     const { classId, subject, page = 1, limit = 10 } = req.query;
@@ -368,7 +476,7 @@ router.get('/study-materials', authenticateToken, requireRole(['teacher']), requ
 });
 
 // Delete study material
-router.delete('/study-materials/:materialId', authenticateToken, requireRole(['teacher']), requireApproval, async (req, res) => {
+router.delete('/materials/:materialId', authenticateToken, requireRole(['teacher']), requireApproval, async (req, res) => {
   try {
     const teacherId = req.user._id;
     const { materialId } = req.params;

@@ -33,12 +33,16 @@ api.interceptors.response.use(
   },
   (error) => {
     const message = error.response?.data?.message || 'An error occurred';
+    const isLoginRequest = error.config?.url?.includes('/auth/login');
 
     if (error.response?.status === 401) {
       localStorage.removeItem('firebaseToken');
       window.location.href = '/';
     } else if (error.response?.status === 403) {
-      toast.error('Access denied');
+      // Don't show toast for login requests with pending approval - let AuthContext handle it
+      if (!isLoginRequest) {
+        toast.error('Access denied');
+      }
     } else if (error.response?.status === 500) {
       toast.error('Server error. Please try again later.');
     } else {
@@ -65,6 +69,7 @@ export const adminAPI = {
   getUserRequests: (status = 'all') => api.get('/admin/requests', { params: { status } }),
   approveUser: (requestId, role, adminNotes = '') => api.post('/admin/approve-user', { requestId, role, adminNotes }),
   rejectUser: (requestId, adminNotes = '') => api.post('/admin/reject-user', { requestId, adminNotes }),
+  blockUser: (requestId, adminNotes = '') => api.post('/admin/block-user', { requestId, adminNotes }),
 
   // User management
   getAllUsers: () => api.get('/admin/users'),

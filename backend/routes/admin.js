@@ -5,7 +5,7 @@ const User = require('../models/User');
 const UserRequest = require('../models/UserRequest');
 const Class = require('../models/Class');
 const Attendance = require('../models/Attendance');
-const { sendApprovalEmail } = require('../utils/emailService');
+const { sendApprovalEmail, sendRejectionEmail } = require('../utils/emailService');
 
 // Get dashboard stats
 router.get('/dashboard-stats', authenticateToken, requireRole(['admin']), async (req, res) => {
@@ -57,7 +57,8 @@ router.get('/requests', authenticateToken, requireRole(['admin']), async (req, r
     const stats = {
       pending: await UserRequest.countDocuments({ status: 'pending' }),
       approved: await UserRequest.countDocuments({ status: 'approved' }),
-      rejected: await UserRequest.countDocuments({ status: 'rejected' })
+      rejected: await UserRequest.countDocuments({ status: 'rejected' }),
+      blocked: await UserRequest.countDocuments({ status: 'blocked' })
     };
 
     res.json({
@@ -146,12 +147,62 @@ router.post('/reject-user', authenticateToken, requireRole(['admin']), async (re
     userRequest.adminNotes = adminNotes;
     await userRequest.save();
 
+    // Send rejection email
+    try {
+      await sendRejectionEmail(userRequest.userId, adminNotes);
+    } catch (emailError) {
+      console.error('Error sending rejection email:', emailError);
+    }
+
     res.json({
       userRequest,
       message: 'User request rejected'
     });
   } catch (error) {
     console.error('Reject user error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Block user request
+router.post('/block-user', authenticateToken, requireRole(['admin']), async (req, res) => {
+  try {
+    const { requestId, adminNotes } = req.body;
+
+    // Find and update the user request
+    const userRequest = await UserRequest.findById(requestId).populate('userId');
+
+    if (!userRequest) {
+      return res.status(404).json({ error: 'User request not found' });
+    }
+
+    if (userRequest.status !== 'pending') {
+      return res.status(400).json({ error: 'Request has already been processed' });
+    }
+
+    // Update user to blocked
+    await User.findByIdAndUpdate(
+      userRequest.userId._id,
+      {
+        isBlocked: true,
+        blockedAt: new Date(),
+        blockedBy: req.user._id,
+        isApproved: false
+      }
+    );
+
+    // Update user request
+    userRequest.status = 'blocked';
+    userRequest.processedBy = req.user._id;
+    userRequest.adminNotes = adminNotes;
+    await userRequest.save();
+
+    res.json({
+      userRequest,
+      message: 'User blocked successfully'
+    });
+  } catch (error) {
+    console.error('Block user error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

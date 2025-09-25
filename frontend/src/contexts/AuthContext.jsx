@@ -66,6 +66,7 @@ export const AuthProvider = ({ children }) => {
           if (error.response?.status === 403 && error.response?.data?.userForStorage) {
             setUserProfile(error.response.data.user);
             localStorage.setItem('userProfile', JSON.stringify(error.response.data.userForStorage));
+            toast.info(error.response.data.message || 'Account pending approval. You will receive an email when your account is verified.');
           } else if (error.response?.status !== 401) {
             toast.error('Error loading user profile');
           }
@@ -114,7 +115,7 @@ export const AuthProvider = ({ children }) => {
       if (error.response?.status === 403 && error.response?.data?.userForStorage) {
         setUserProfile(error.response.data.user);
         localStorage.setItem('userProfile', JSON.stringify(error.response.data.userForStorage));
-        toast.info(error.response.data.message || 'Account pending approval');
+        toast.info(error.response.data.message || 'Account pending approval. You will receive an email when your account is verified.');
         return error.response.data.user;
       } else {
         toast.error('Failed to sign in. Please try again.');
