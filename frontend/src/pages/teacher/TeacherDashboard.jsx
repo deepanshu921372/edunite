@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Home,
   Calendar,
@@ -17,32 +17,57 @@ import AttendanceManagement from '../../components/teacher/AttendanceManagement'
 import MaterialsManagement from '../../components/teacher/MaterialsManagement';
 
 const TeacherDashboard = () => {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Get current tab from URL path
+  const getCurrentTab = () => {
+    const path = location.pathname;
+    if (path.includes('/timetable')) return 'timetable';
+    if (path.includes('/attendance')) return 'attendance';
+    if (path.includes('/materials')) return 'materials';
+    return 'dashboard';
+  };
+
+  const [activeTab, setActiveTab] = useState(getCurrentTab());
+
+  // Update active tab when URL changes
+  useEffect(() => {
+    setActiveTab(getCurrentTab());
+  }, [location.pathname]);
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    // Update URL to maintain state on refresh
+    const basePath = '/teacher';
+    const newPath = tab === 'dashboard' ? basePath : `${basePath}/${tab}`;
+    navigate(newPath, { replace: true });
+  };
 
   const navigation = [
     {
       name: 'Dashboard',
       icon: Home,
       active: activeTab === 'dashboard',
-      onClick: () => setActiveTab('dashboard')
+      onClick: () => handleTabChange('dashboard')
     },
     {
       name: 'Timetable',
       icon: Calendar,
       active: activeTab === 'timetable',
-      onClick: () => setActiveTab('timetable')
+      onClick: () => handleTabChange('timetable')
     },
     {
       name: 'Attendance',
       icon: Users,
       active: activeTab === 'attendance',
-      onClick: () => setActiveTab('attendance')
+      onClick: () => handleTabChange('attendance')
     },
     {
       name: 'Materials',
       icon: BookOpen,
       active: activeTab === 'materials',
-      onClick: () => setActiveTab('materials')
+      onClick: () => handleTabChange('materials')
     }
   ];
 
@@ -66,15 +91,6 @@ const TeacherDashboard = () => {
       navigation={navigation}
       title="Teacher Dashboard"
     >
-      <Routes>
-        <Route path="/" element={renderContent()} />
-        <Route path="/dashboard" element={<TeacherOverview />} />
-        <Route path="/timetable" element={<TimetableManagement />} />
-        <Route path="/attendance" element={<AttendanceManagement />} />
-        <Route path="/materials" element={<MaterialsManagement />} />
-        <Route path="*" element={<Navigate to="/teacher" replace />} />
-      </Routes>
-
       {/* Content based on active tab for SPA behavior */}
       <div className="px-4 sm:px-6 lg:px-8">
         {renderContent()}

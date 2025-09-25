@@ -80,19 +80,22 @@ router.get('/stats', authenticateToken, requireRole(['teacher']), requireApprova
       .limit(5);
 
     res.json({
-      totalClasses: classes.length,
-      totalStudents,
-      classesThisMonth,
-      classesTaken,
-      attendancePercentage: classesThisMonth > 0 ? Math.round((classesTaken / classesThisMonth) * 100) : 0,
-      studyMaterialsCount,
-      recentAttendance: recentAttendance.map(record => ({
-        _id: record._id,
-        class: record.class,
-        date: record.date,
-        studentsPresent: record.students.filter(s => s.status === 'present').length,
-        totalStudents: record.students.length
-      }))
+      success: true,
+      data: {
+        totalClasses: classes.length,
+        totalStudents,
+        classesThisMonth,
+        classesTaken,
+        attendancePercentage: classesThisMonth > 0 ? Math.round((classesTaken / classesThisMonth) * 100) : 0,
+        studyMaterialsCount,
+        recentAttendance: recentAttendance.map(record => ({
+          _id: record._id,
+          class: record.class,
+          date: record.date,
+          studentsPresent: record.students ? record.students.filter(s => s.status === 'present').length : 0,
+          totalStudents: record.students ? record.students.length : 0
+        }))
+      }
     });
   } catch (error) {
     console.error('Teacher dashboard stats error:', error);

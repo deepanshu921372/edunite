@@ -48,7 +48,8 @@ const AttendanceManagement = () => {
   const fetchClasses = async () => {
     try {
       const response = await teacherAPI.getMyClasses();
-      setClasses(response.data || []);
+      console.log('Classes response:', response);
+      setClasses(response.data || response || []);
     } catch (error) {
       console.error('Error fetching classes:', error);
       toast.error('Failed to load classes');

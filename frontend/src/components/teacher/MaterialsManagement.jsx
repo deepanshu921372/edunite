@@ -54,8 +54,10 @@ const MaterialsManagement = () => {
         teacherAPI.getMyClasses()
       ]);
 
-      setMaterials(materialsResponse.data || []);
-      setClasses(classesResponse.data || []);
+      console.log('Materials response:', materialsResponse);
+      console.log('Classes response:', classesResponse);
+      setMaterials(materialsResponse.data || materialsResponse || []);
+      setClasses(classesResponse.data || classesResponse || []);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Failed to load materials');
@@ -65,13 +67,15 @@ const MaterialsManagement = () => {
   };
 
   const filterMaterials = () => {
-    let filtered = materials;
+    // Ensure materials is always an array
+    const materialsList = Array.isArray(materials) ? materials : [];
+    let filtered = materialsList;
 
     if (searchTerm) {
       filtered = filtered.filter(material =>
-        material.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        material.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        material.subject.toLowerCase().includes(searchTerm.toLowerCase())
+        material.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        material.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        material.subject?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -81,11 +85,11 @@ const MaterialsManagement = () => {
 
     if (filterType !== 'all') {
       filtered = filtered.filter(material =>
-        material.files.some(file => getFileType(file.name) === filterType)
+        Array.isArray(material.files) && material.files.some(file => getFileType(file.name) === filterType)
       );
     }
 
-    setFilteredMaterials(filtered);
+    setFilteredMaterials(Array.isArray(filtered) ? filtered : []);
   };
 
   const getFileType = (fileName) => {
@@ -289,7 +293,7 @@ const MaterialsManagement = () => {
         transition={{ duration: 0.6 }}
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
       >
-        {filteredMaterials.length === 0 ? (
+        {!Array.isArray(filteredMaterials) || filteredMaterials.length === 0 ? (
           <div className="col-span-full text-center py-12">
             <BookOpen className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-2 text-sm font-medium text-gray-900">No materials found</h3>
@@ -300,7 +304,7 @@ const MaterialsManagement = () => {
             </p>
           </div>
         ) : (
-          filteredMaterials.map((material, index) => (
+          (Array.isArray(filteredMaterials) ? filteredMaterials : []).map((material, index) => (
             <motion.div
               key={material.id}
               initial={{ opacity: 0, y: 20 }}

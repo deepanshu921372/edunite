@@ -39,7 +39,8 @@ const TeacherOverview = () => {
   const fetchTeacherStats = async () => {
     try {
       const response = await teacherAPI.getTeacherStats();
-      setStats(response.data);
+      console.log('Teacher stats response:', response);
+      setStats(response.data || response);
     } catch (error) {
       console.error('Error fetching teacher stats:', error);
       toast.error('Failed to load statistics');
