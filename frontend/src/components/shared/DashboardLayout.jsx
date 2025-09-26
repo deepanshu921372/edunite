@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { LogOut, Menu, X, User } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import eduniteTextLogo from '../../assets/eduniteTextLogo.png';
+import eduniteFavLogo from '../../assets/eduniteFavLogo.png';
 
 const DashboardLayout = ({ children, navigation, title }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -29,11 +31,22 @@ const DashboardLayout = ({ children, navigation, title }) => {
           className="fixed inset-y-0 left-0 flex w-80 bg-white shadow-xl"
         >
           <div className="flex flex-col flex-1 min-h-0">
-            <div className="flex items-center justify-between px-4 py-4 bg-blue-600">
-              <h2 className="text-xl font-semibold text-white">Edunite</h2>
+            <div className="flex items-center justify-between px-4 h-16 bg-gray-800 border-b border-gray-700">
+              <div className="flex items-center space-x-3">
+                <img
+                  src={eduniteFavLogo}
+                  alt="Edunite Logo"
+                  className="w-10 h-10"
+                />
+                <img
+                  src={eduniteTextLogo}
+                  alt="Edunite"
+                  className="h-8"
+                />
+              </div>
               <button
                 onClick={() => setSidebarOpen(false)}
-                className="text-blue-200 hover:text-white"
+                className="text-blue-200 hover:text-white cursor-pointer transition-colors duration-200"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -47,10 +60,10 @@ const DashboardLayout = ({ children, navigation, title }) => {
                     item.onClick();
                     setSidebarOpen(false);
                   }}
-                  className={`w-full group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
+                  className={`w-full group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer hover:scale-105 ${
                     item.active
-                      ? 'bg-blue-100 text-blue-900'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      ? 'bg-blue-100 text-blue-900 shadow-md'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
                   }`}
                 >
                   <item.icon
@@ -66,7 +79,7 @@ const DashboardLayout = ({ children, navigation, title }) => {
             <div className="px-4 py-4 border-t border-gray-200">
               <button
                 onClick={handleLogout}
-                className="w-full group flex items-center px-2 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200"
+                className="w-full group flex items-center px-2 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-red-50 hover:text-red-700 transition-all duration-200 cursor-pointer hover:scale-105"
               >
                 <LogOut className="mr-3 flex-shrink-0 h-6 w-6 text-gray-400 group-hover:text-gray-500" />
                 Sign out
@@ -79,8 +92,19 @@ const DashboardLayout = ({ children, navigation, title }) => {
       {/* Desktop sidebar */}
       <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0">
         <div className="flex flex-col flex-grow bg-white border-r border-gray-200">
-          <div className="flex items-center px-4 py-4 bg-blue-600">
-            <h2 className="text-xl font-semibold text-white">Edunite</h2>
+          <div className="flex items-center px-4 h-16 bg-gray-800 border-b border-gray-700">
+            <div className="flex items-center space-x-2">
+              <img
+                src={eduniteFavLogo}
+                alt="Edunite Logo"
+                className="w-11 h-11"
+              />
+              <img
+                src={eduniteTextLogo}
+                alt="Edunite"
+                className="h-10"
+              />
+            </div>
           </div>
 
           <nav className="flex-1 px-4 py-4 space-y-1">
@@ -88,10 +112,10 @@ const DashboardLayout = ({ children, navigation, title }) => {
               <button
                 key={item.name}
                 onClick={item.onClick}
-                className={`w-full group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
+                className={`w-full group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer hover:scale-105 ${
                   item.active
-                    ? 'bg-blue-100 text-blue-900'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'bg-blue-100 text-blue-900 shadow-md'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
                 }`}
               >
                 <item.icon
@@ -107,7 +131,7 @@ const DashboardLayout = ({ children, navigation, title }) => {
           <div className="px-4 py-4 border-t border-gray-200">
             <button
               onClick={handleLogout}
-              className="w-full group flex items-center px-2 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200"
+              className="w-full group flex items-center px-2 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-red-50 hover:text-red-700 transition-all duration-200 cursor-pointer hover:scale-105"
             >
               <LogOut className="mr-3 flex-shrink-0 h-6 w-6 text-gray-400 group-hover:text-gray-500" />
               Sign out
@@ -121,7 +145,7 @@ const DashboardLayout = ({ children, navigation, title }) => {
         <div className="sticky top-0 z-10 flex-shrink-0 flex h-16 bg-white shadow">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="px-4 border-r border-gray-200 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 lg:hidden"
+            className="px-4 border-r border-gray-200 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 lg:hidden cursor-pointer hover:bg-gray-50 transition-colors duration-200"
           >
             <Menu className="h-6 w-6" />
           </button>
