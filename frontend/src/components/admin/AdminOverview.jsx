@@ -4,23 +4,15 @@ import {
   Users,
   GraduationCap,
   BookOpen,
-  TrendingUp,
   UserPlus,
   Calendar
 } from 'lucide-react';
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
   PieChart,
   Pie,
   Cell,
-  LineChart,
-  Line
+  ResponsiveContainer,
+  Tooltip
 } from 'recharts';
 import { adminAPI } from '../../services/api';
 import LoadingSpinner from '../shared/LoadingSpinner';
@@ -64,61 +56,36 @@ const AdminOverview = () => {
       name: 'Total Students',
       value: stats?.totalStudents || 0,
       icon: <GraduationCap className="w-8 h-8" />,
-      color: 'bg-blue-500',
-      change: '+12%',
-      changeType: 'increase'
+      color: 'bg-blue-500'
     },
     {
       name: 'Total Teachers',
       value: stats?.totalTeachers || 0,
       icon: <Users className="w-8 h-8" />,
-      color: 'bg-green-500',
-      change: '+8%',
-      changeType: 'increase'
+      color: 'bg-green-500'
     },
     {
       name: 'Active Classes',
       value: stats?.totalClasses || 0,
       icon: <BookOpen className="w-8 h-8" />,
-      color: 'bg-purple-500',
-      change: '+15%',
-      changeType: 'increase'
+      color: 'bg-purple-500'
     },
     {
       name: 'Pending Requests',
       value: stats?.pendingRequests || 0,
       icon: <UserPlus className="w-8 h-8" />,
-      color: 'bg-yellow-500',
-      change: '-5%',
-      changeType: 'decrease'
+      color: 'bg-yellow-500'
     }
   ];
 
-  // Sample data for charts
-  const monthlyData = [
-    { month: 'Jan', students: 45, teachers: 8 },
-    { month: 'Feb', students: 52, teachers: 10 },
-    { month: 'Mar', students: 58, teachers: 12 },
-    { month: 'Apr', students: 65, teachers: 14 },
-    { month: 'May', students: 72, teachers: 16 },
-    { month: 'Jun', students: 78, teachers: 18 }
-  ];
+  // Only show charts if we have meaningful data
+  const hasData = stats && (stats.totalStudents > 0 || stats.totalTeachers > 0 || stats.totalClasses > 0);
 
   const roleData = [
     { name: 'Students', value: stats?.totalStudents || 0, color: '#3b82f6' },
     { name: 'Teachers', value: stats?.totalTeachers || 0, color: '#10b981' },
     { name: 'Admins', value: stats?.totalAdmins || 1, color: '#8b5cf6' }
-  ];
-
-  const attendanceData = [
-    { day: 'Mon', attendance: 85 },
-    { day: 'Tue', attendance: 88 },
-    { day: 'Wed', attendance: 82 },
-    { day: 'Thu', attendance: 90 },
-    { day: 'Fri', attendance: 86 },
-    { day: 'Sat', attendance: 92 },
-    { day: 'Sun', attendance: 78 }
-  ];
+  ].filter(item => item.value > 0); // Only show roles that have users
 
   return (
     <div className="space-y-8">
@@ -151,15 +118,9 @@ const AdminOverview = () => {
                     <dt className="text-sm font-medium text-gray-500 truncate">
                       {stat.name}
                     </dt>
-                    <dd className="flex items-baseline">
+                    <dd>
                       <div className="text-2xl font-semibold text-gray-900">
                         {stat.value}
-                      </div>
-                      <div className={`ml-2 flex items-baseline text-sm font-semibold ${
-                        stat.changeType === 'increase' ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        <TrendingUp className="self-center flex-shrink-0 h-4 w-4" />
-                        <span className="ml-1">{stat.change}</span>
                       </div>
                     </dd>
                   </dl>
@@ -170,32 +131,11 @@ const AdminOverview = () => {
         ))}
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Monthly Growth Chart */}
+      {/* User Distribution Chart - Only show if we have data */}
+      {hasData && roleData.length > 0 && (
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6 }}
-          className="bg-white p-6 rounded-lg shadow-md"
-        >
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Monthly Growth</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={monthlyData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="students" fill="#3b82f6" name="Students" />
-              <Bar dataKey="teachers" fill="#10b981" name="Teachers" />
-            </BarChart>
-          </ResponsiveContainer>
-        </motion.div>
-
-        {/* User Roles Distribution */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           className="bg-white p-6 rounded-lg shadow-md"
         >
@@ -232,89 +172,25 @@ const AdminOverview = () => {
             ))}
           </div>
         </motion.div>
-      </div>
+      )}
 
-      {/* Weekly Attendance Trend */}
+      {/* Recent Activity - Show message instead of hardcoded data */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.2 }}
-        className="bg-white p-6 rounded-lg shadow-md"
-      >
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Weekly Attendance Trend</h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={attendanceData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="day" />
-            <YAxis domain={[0, 100]} />
-            <Tooltip />
-            <Line
-              type="monotone"
-              dataKey="attendance"
-              stroke="#3b82f6"
-              strokeWidth={3}
-              dot={{ fill: '#3b82f6', strokeWidth: 2, r: 6 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </motion.div>
-
-      {/* Recent Activity */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.3 }}
         className="bg-white overflow-hidden shadow-md rounded-lg"
       >
         <div className="px-6 py-4 border-b border-gray-200">
           <h3 className="text-lg font-medium text-gray-900">Recent Activity</h3>
         </div>
-        <div className="px-6 py-4">
-          <div className="flow-root">
-            <ul className="-my-5 divide-y divide-gray-200">
-              {[
-                {
-                  id: 1,
-                  event: 'New teacher John Smith joined',
-                  time: '2 hours ago',
-                  icon: <Users className="w-5 h-5 text-green-500" />
-                },
-                {
-                  id: 2,
-                  event: 'Class "Advanced Mathematics" was created',
-                  time: '4 hours ago',
-                  icon: <BookOpen className="w-5 h-5 text-blue-500" />
-                },
-                {
-                  id: 3,
-                  event: 'Student approval request from Sarah Wilson',
-                  time: '6 hours ago',
-                  icon: <UserPlus className="w-5 h-5 text-yellow-500" />
-                },
-                {
-                  id: 4,
-                  event: 'Monthly attendance report generated',
-                  time: '1 day ago',
-                  icon: <Calendar className="w-5 h-5 text-purple-500" />
-                }
-              ].map((activity) => (
-                <li key={activity.id} className="py-5">
-                  <div className="flex items-center space-x-4">
-                    <div className="flex-shrink-0">
-                      {activity.icon}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
-                        {activity.event}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {activity.time}
-                      </p>
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
+        <div className="px-6 py-8">
+          <div className="text-center">
+            <Calendar className="mx-auto h-12 w-12 text-gray-400" />
+            <h3 className="mt-2 text-sm font-medium text-gray-900">No recent activity</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              Activity logs will appear here as users interact with the system.
+            </p>
           </div>
         </div>
       </motion.div>
