@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
   Calendar,
@@ -29,15 +29,19 @@ import {
   AreaChart
 } from 'recharts';
 import { studentAPI } from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 import LoadingSpinner from '../shared/LoadingSpinner';
 import toast from 'react-hot-toast';
 
 const AttendanceView = () => {
+  const { userProfile, currentUser } = useAuth();
   const [attendanceData, setAttendanceData] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState('thisMonth');
   const [selectedSubject, setSelectedSubject] = useState('all');
+  const [error, setError] = useState(null);
+  const fetchingRef = useRef(false);
 
   const periodOptions = [
     { value: 'thisWeek', label: 'This Week' },
@@ -48,11 +52,25 @@ const AttendanceView = () => {
   ];
 
   useEffect(() => {
-    fetchAttendanceData();
-  }, [selectedPeriod]);
+    // Only fetch if user is authenticated and approved
+    if (userProfile && userProfile.isApproved && currentUser && !fetchingRef.current) {
+      fetchAttendanceData();
+    } else if (userProfile && !userProfile.isApproved) {
+      setLoading(false);
+      setError('Account approval required to access attendance data');
+    } else if (!currentUser) {
+      setLoading(false);
+      setError('Please sign in to access attendance data');
+    }
+  }, [selectedPeriod, userProfile, currentUser]);
 
   const fetchAttendanceData = async () => {
+    if (fetchingRef.current) return;
+
+    fetchingRef.current = true;
+    setError(null);
     setLoading(true);
+
     try {
       const endDate = new Date().toISOString().split('T')[0];
       let startDate;
@@ -78,13 +96,18 @@ const AttendanceView = () => {
       }
 
       const response = await studentAPI.getMyAttendance(startDate, endDate);
-      setAttendanceData(response.data?.attendanceRecords || []);
-      setStats(response.data?.statistics || null);
+      setAttendanceData(response.attendance || []);
+      setStats(response.statistics || null);
     } catch (error) {
       console.error('Error fetching attendance data:', error);
-      toast.error('Failed to load attendance data');
+      if (error.response?.status === 403) {
+        setError('Access denied. Please ensure your account is approved.');
+      } else {
+        setError('Failed to load attendance data');
+      }
     } finally {
       setLoading(false);
+      fetchingRef.current = false;
     }
   };
 

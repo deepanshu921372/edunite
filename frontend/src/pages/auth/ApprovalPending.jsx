@@ -1,17 +1,38 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Clock, Mail, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import toast from 'react-hot-toast';
 
 const ApprovalPending = () => {
   const { currentUser, logout, userProfile } = useAuth();
   const navigate = useNavigate();
-  
+  const [countdown, setCountdown] = useState(2);
+
   const handleSignOut = async () => {
     await logout();
     navigate('/');
   };
+
+  // Auto-redirect after 2 seconds
+  useEffect(() => {
+    let hasRedirected = false;
+
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1 && !hasRedirected) {
+          hasRedirected = true;
+          // Logout and redirect without showing additional toast
+          handleSignOut();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4 sm:px-6 lg:px-8">
@@ -36,9 +57,19 @@ const ApprovalPending = () => {
               Approval Pending
             </h2>
 
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 mb-4">
               Your account is currently under review. An administrator will approve your access soon.
             </p>
+
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-6">
+              <p className="text-sm text-yellow-800">
+                {countdown > 0 ? (
+                  <>Automatically signing you out in <span className="font-bold text-lg">{countdown}</span> second{countdown !== 1 ? 's' : ''}...</>
+                ) : (
+                  'Signing out...'
+                )}
+              </p>
+            </div>
 
             <div className="bg-blue-50 rounded-lg p-4 mb-6">
               <div className="flex items-center mb-3">

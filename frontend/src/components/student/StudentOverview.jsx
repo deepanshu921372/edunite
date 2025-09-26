@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
   BookOpen,
@@ -9,7 +9,8 @@ import {
   FileText,
   Users,
   CheckCircle,
-  Download
+  Download,
+  AlertTriangle
 } from 'lucide-react';
 import {
   LineChart,
@@ -26,31 +27,74 @@ import {
   Bar
 } from 'recharts';
 import { studentAPI } from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 import LoadingSpinner from '../shared/LoadingSpinner';
 import toast from 'react-hot-toast';
 
 const StudentOverview = () => {
+  const { userProfile, currentUser } = useAuth();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const fetchingRef = useRef(false);
 
   useEffect(() => {
-    fetchStudentStats();
-  }, []);
+    // Only fetch if user is authenticated and approved
+    if (userProfile && userProfile.isApproved && currentUser && !fetchingRef.current) {
+      fetchStudentStats();
+    } else if (userProfile && !userProfile.isApproved) {
+      setLoading(false);
+      setError('Account approval required to access dashboard');
+    } else if (!currentUser) {
+      setLoading(false);
+      setError('Please sign in to access dashboard');
+    }
+  }, [userProfile, currentUser]);
 
   const fetchStudentStats = async () => {
+    if (fetchingRef.current) return;
+
+    fetchingRef.current = true;
+    setError(null);
+
     try {
       const response = await studentAPI.getStudentStats();
-      setStats(response.data);
+      setStats(response);
     } catch (error) {
       console.error('Error fetching student stats:', error);
-      toast.error('Failed to load statistics');
+      if (error.response?.status === 403) {
+        setError('Access denied. Please ensure your account is approved.');
+      } else {
+        setError('Failed to load dashboard statistics');
+      }
     } finally {
       setLoading(false);
+      fetchingRef.current = false;
     }
   };
 
   if (loading) {
     return <LoadingSpinner message="Loading dashboard..." />;
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12 bg-white rounded-lg shadow-sm border border-gray-200">
+        <AlertTriangle className="mx-auto h-12 w-12 text-red-400" />
+        <h3 className="mt-2 text-sm font-medium text-gray-900">Unable to load dashboard</h3>
+        <p className="mt-1 text-sm text-gray-500">{error}</p>
+        <button
+          onClick={() => {
+            setLoading(true);
+            setError(null);
+            fetchStudentStats();
+          }}
+          className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        >
+          Try Again
+        </button>
+      </div>
+    );
   }
 
   const quickStats = [

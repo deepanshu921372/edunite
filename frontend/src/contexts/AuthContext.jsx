@@ -18,7 +18,9 @@ export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [pendingToastShown, setPendingToastShown] = useState(false);
   const [initializing, setInitializing] = useState(true);
+  const [authProcessingRef] = useState({ current: false });
 
   // Load user profile from localStorage on initialization
   useEffect(() => {
@@ -36,56 +38,140 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setCurrentUser(firebaseUser);
+      // Prevent multiple simultaneous calls using ref
+      if (authProcessingRef.current) return;
+      authProcessingRef.current = true;
 
-      if (firebaseUser) {
-        try {
-          // Get Firebase ID token
-          const token = await firebaseUser.getIdToken();
-          localStorage.setItem('firebaseToken', token);
+      try {
+        setCurrentUser(firebaseUser);
 
-          // Send user data to backend and get profile
-          const userData = {
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName,
-            photoURL: firebaseUser.photoURL,
-          };
+        if (firebaseUser) {
+          // Check if we already have this user's profile stored
+          const storedProfile = localStorage.getItem('userProfile');
+          if (storedProfile) {
+            try {
+              const profile = JSON.parse(storedProfile);
+              if (profile.firebaseUid === firebaseUser.uid) {
+                // User profile exists in localStorage
+                setUserProfile(profile);
 
-          const response = await authAPI.login(userData);
-          setUserProfile(response.user);
+                // If user is not approved, don't make API call and show pending message only once
+                if (!profile.isApproved && !pendingToastShown) {
+                  setPendingToastShown(true);
+                  toast('Account pending approval. You will receive an email when your account is verified.', {
+                    icon: 'ℹ️',
+                    duration: 4000,
+                  });
+                }
 
-          // Store user details in localStorage
-          if (response.userForStorage) {
-            localStorage.setItem('userProfile', JSON.stringify(response.userForStorage));
+                setLoading(false);
+                setInitializing(false);
+                return;
+              }
+            } catch (e) {
+              // Invalid stored profile, remove it
+              localStorage.removeItem('userProfile');
+            }
           }
-        } catch (error) {
-          console.error('Error fetching user profile:', error);
 
-          // Handle pending approval case
-          if (error.response?.status === 403 && error.response?.data?.userForStorage) {
-            setUserProfile(error.response.data.user);
-            localStorage.setItem('userProfile', JSON.stringify(error.response.data.userForStorage));
-            toast.info(error.response.data.message || 'Account pending approval. You will receive an email when your account is verified.');
-          } else if (error.response?.status !== 401) {
-            toast.error('Error loading user profile');
+          try {
+            // Get Firebase ID token
+            const token = await firebaseUser.getIdToken();
+            localStorage.setItem('firebaseToken', token);
+
+            // Send user data to backend and get profile
+            const userData = {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              displayName: firebaseUser.displayName,
+              photoURL: firebaseUser.photoURL,
+            };
+
+            const response = await authAPI.login(userData);
+            setUserProfile(response.user);
+
+            // Store user details in localStorage
+            if (response.userForStorage) {
+              localStorage.setItem('userProfile', JSON.stringify(response.userForStorage));
+            }
+          } catch (error) {
+            console.error('Error fetching user profile:', error);
+
+            // Handle pending approval case
+            if (error.response?.status === 403 && error.response?.data?.userForStorage) {
+              setUserProfile(error.response.data.user);
+              localStorage.setItem('userProfile', JSON.stringify(error.response.data.userForStorage));
+
+              // Only show toast once per session
+              if (!pendingToastShown) {
+                setPendingToastShown(true);
+                toast(error.response.data.message || 'Account pending approval. You will receive an email when your account is verified.', {
+                  icon: 'ℹ️',
+                  duration: 4000,
+                });
+              }
+            } else if (error.response?.status !== 401) {
+              toast.error('Error loading user profile');
+            }
           }
+        } else {
+          localStorage.removeItem('firebaseToken');
+          localStorage.removeItem('userProfile');
+          setUserProfile(null);
+          setPendingToastShown(false); // Reset when no user
         }
-      } else {
-        localStorage.removeItem('firebaseToken');
-        localStorage.removeItem('userProfile');
-        setUserProfile(null);
-      }
 
-      setLoading(false);
-      setInitializing(false);
+        setLoading(false);
+        setInitializing(false);
+      } finally {
+        authProcessingRef.current = false;
+      }
     });
 
     return unsubscribe;
-  }, []);
+  }, [pendingToastShown]);
 
   const login = async () => {
+    // Prevent login if auth is already processing
+    if (authProcessingRef.current) {
+      return userProfile;
+    }
+
+    // Check if user is already pending approval - don't make API call
+    if (userProfile && !userProfile.isApproved) {
+      if (!pendingToastShown) {
+        setPendingToastShown(true);
+        toast('Account pending approval. You will receive an email when your account is verified.', {
+          icon: 'ℹ️',
+          duration: 4000,
+        });
+      }
+      return userProfile;
+    }
+
+    // Check localStorage for existing pending user before making Google sign-in
+    const storedProfile = localStorage.getItem('userProfile');
+    if (storedProfile) {
+      try {
+        const profile = JSON.parse(storedProfile);
+        if (profile && !profile.isApproved) {
+          setUserProfile(profile);
+          if (!pendingToastShown) {
+            setPendingToastShown(true);
+            toast('Account pending approval. You will receive an email when your account is verified.', {
+              icon: 'ℹ️',
+              duration: 4000,
+            });
+          }
+          return profile;
+        }
+      } catch (e) {
+        localStorage.removeItem('userProfile');
+      }
+    }
+
     setLoading(true);
+    authProcessingRef.current = true;
     try {
       const result = await signInWithGoogle();
       const token = await result.user.getIdToken();
@@ -115,7 +201,15 @@ export const AuthProvider = ({ children }) => {
       if (error.response?.status === 403 && error.response?.data?.userForStorage) {
         setUserProfile(error.response.data.user);
         localStorage.setItem('userProfile', JSON.stringify(error.response.data.userForStorage));
-        toast.info(error.response.data.message || 'Account pending approval. You will receive an email when your account is verified.');
+
+        // Only show toast once per session
+        if (!pendingToastShown) {
+          setPendingToastShown(true);
+          toast(error.response.data.message || 'Account pending approval. You will receive an email when your account is verified.', {
+            icon: 'ℹ️',
+            duration: 4000,
+          });
+        }
         return error.response.data.user;
       } else {
         toast.error('Failed to sign in. Please try again.');
@@ -123,23 +217,27 @@ export const AuthProvider = ({ children }) => {
       }
     } finally {
       setLoading(false);
+      authProcessingRef.current = false;
     }
   };
 
   const logout = async () => {
     setLoading(true);
+    authProcessingRef.current = true;
     try {
       await signOutUser();
       localStorage.removeItem('firebaseToken');
       localStorage.removeItem('userProfile');
       setCurrentUser(null);
       setUserProfile(null);
+      setPendingToastShown(false); // Reset toast flag
       toast.success('Signed out successfully');
     } catch (error) {
       console.error('Error signing out:', error);
       toast.error('Error signing out');
     } finally {
       setLoading(false);
+      authProcessingRef.current = false;
     }
   };
 

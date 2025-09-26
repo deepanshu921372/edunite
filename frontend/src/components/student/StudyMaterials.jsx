@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
   Search,
@@ -15,10 +15,12 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { studentAPI } from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 import LoadingSpinner from '../shared/LoadingSpinner';
 import toast from 'react-hot-toast';
 
 const StudyMaterials = () => {
+  const { userProfile, currentUser } = useAuth();
   const [materials, setMaterials] = useState([]);
   const [filteredMaterials, setFilteredMaterials] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,27 +28,47 @@ const StudyMaterials = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
+  const [error, setError] = useState(null);
+  const fetchingRef = useRef(false);
 
   const subjects = ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'Computer Science', 'English'];
 
   useEffect(() => {
-    fetchMaterials();
-  }, []);
+    // Only fetch if user is authenticated and approved
+    if (userProfile && userProfile.isApproved && currentUser && !fetchingRef.current) {
+      fetchMaterials();
+    } else if (userProfile && !userProfile.isApproved) {
+      setLoading(false);
+      setError('Account approval required to access study materials');
+    } else if (!currentUser) {
+      setLoading(false);
+      setError('Please sign in to access study materials');
+    }
+  }, [userProfile, currentUser]);
 
   useEffect(() => {
     filterAndSortMaterials();
   }, [materials, searchTerm, selectedSubject, sortBy]);
 
   const fetchMaterials = async () => {
+    if (fetchingRef.current) return;
+
+    fetchingRef.current = true;
+    setError(null);
+
     try {
-      // If subject filtering is needed, we can fetch by subject
       const response = await studentAPI.getMaterialsBySubject('');
-      setMaterials(response.data || []);
+      setMaterials(response.studyMaterials || []);
     } catch (error) {
       console.error('Error fetching materials:', error);
-      toast.error('Failed to load study materials');
+      if (error.response?.status === 403) {
+        setError('Access denied. Please ensure your account is approved.');
+      } else {
+        setError('Failed to load study materials');
+      }
     } finally {
       setLoading(false);
+      fetchingRef.current = false;
     }
   };
 
@@ -139,6 +161,26 @@ const StudyMaterials = () => {
 
   if (loading) {
     return <LoadingSpinner message="Loading study materials..." />;
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12 bg-white rounded-lg shadow-sm border border-gray-200">
+        <AlertTriangle className="mx-auto h-12 w-12 text-red-400" />
+        <h3 className="mt-2 text-sm font-medium text-gray-900">Unable to load materials</h3>
+        <p className="mt-1 text-sm text-gray-500">{error}</p>
+        <button
+          onClick={() => {
+            setLoading(true);
+            setError(null);
+            fetchMaterials();
+          }}
+          className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        >
+          Try Again
+        </button>
+      </div>
+    );
   }
 
   return (

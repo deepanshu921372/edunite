@@ -345,7 +345,7 @@ const LandingPage = () => {
       </div>
 
       {/* Custom Styles */}
-      <style jsx>{`
+      <style jsx="true">{`
         .animate-blob {
           animation: blob 7s infinite;
         }

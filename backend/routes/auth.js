@@ -316,6 +316,115 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Update user profile
+router.put('/profile', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1] || req.headers.authorization;
+
+    if (!token) {
+      return res.status(401).json({ error: 'Authorization token required' });
+    }
+
+    const decodedToken = await verifyFirebaseToken(token);
+    const user = await User.findOne({ firebaseUid: decodedToken.uid });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Update user fields
+    const updates = {};
+
+    // Direct fields
+    if (req.body.name !== undefined) {
+      updates.name = req.body.name;
+    }
+
+    // Profile nested fields
+    const profileFields = ['phoneNumber', 'address', 'class', 'schoolName', 'profileImage', 'parentPhoneNumber'];
+    const profileUpdates = {};
+
+    profileFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        profileUpdates[`profile.${field}`] = req.body[field];
+      }
+    });
+
+    // Merge profile updates with direct updates
+    Object.assign(updates, profileUpdates);
+
+    // Update user in database
+    const updatedUser = await User.findByIdAndUpdate(
+      user._id,
+      { $set: updates },
+      { new: true, runValidators: true }
+    );
+
+    res.json({
+      success: true,
+      user: updatedUser,
+      message: 'Profile updated successfully'
+    });
+
+  } catch (error) {
+    console.error('Profile update error:', error);
+
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({
+        error: 'Validation error',
+        details: Object.values(error.errors).map(err => err.message)
+      });
+    }
+
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get user profile
+router.get('/profile', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1] || req.headers.authorization;
+
+    if (!token) {
+      return res.status(401).json({ error: 'Authorization token required' });
+    }
+
+    const decodedToken = await verifyFirebaseToken(token);
+    const user = await User.findOne({ firebaseUid: decodedToken.uid });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const userForStorage = {
+      firebaseUid: user.firebaseUid,
+      email: user.email,
+      name: user.name,
+      displayName: user.name,
+      role: user.role,
+      isApproved: user.isApproved,
+      _id: user._id,
+      phoneNumber: user.profile?.phoneNumber,
+      address: user.profile?.address,
+      class: user.profile?.class,
+      schoolName: user.profile?.schoolName,
+      profileImage: user.profile?.profileImage,
+      parentPhoneNumber: user.profile?.parentPhoneNumber
+    };
+
+    res.json({
+      success: true,
+      user: user,
+      userForStorage: userForStorage,
+      message: 'Profile retrieved successfully'
+    });
+
+  } catch (error) {
+    console.error('Profile fetch error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Send approval email
 const sendApprovalEmail = async (user) => {
   try {

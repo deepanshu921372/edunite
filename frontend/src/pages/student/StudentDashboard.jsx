@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import {
   Home,
   User,
@@ -16,32 +16,53 @@ import StudyMaterials from '../../components/student/StudyMaterials';
 import AttendanceView from '../../components/student/AttendanceView';
 
 const StudentDashboard = () => {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Get active tab from URL
+  const getActiveTabFromURL = () => {
+    const searchParams = new URLSearchParams(location.search);
+    const tab = searchParams.get('tab');
+    return tab || 'dashboard';
+  };
+
+  const [activeTab, setActiveTab] = useState(getActiveTabFromURL());
+
+  // Update active tab when URL changes
+  useEffect(() => {
+    setActiveTab(getActiveTabFromURL());
+  }, [location.search]);
+
+  // Update URL when tab changes
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    navigate(`/student?tab=${tab}`, { replace: true });
+  };
 
   const navigation = [
     {
       name: 'Dashboard',
       icon: Home,
       active: activeTab === 'dashboard',
-      onClick: () => setActiveTab('dashboard')
+      onClick: () => handleTabChange('dashboard')
     },
     {
       name: 'Profile',
       icon: User,
       active: activeTab === 'profile',
-      onClick: () => setActiveTab('profile')
+      onClick: () => handleTabChange('profile')
     },
     {
       name: 'Study Materials',
       icon: BookOpen,
       active: activeTab === 'materials',
-      onClick: () => setActiveTab('materials')
+      onClick: () => handleTabChange('materials')
     },
     {
       name: 'My Attendance',
       icon: BarChart3,
       active: activeTab === 'attendance',
-      onClick: () => setActiveTab('attendance')
+      onClick: () => handleTabChange('attendance')
     }
   ];
 

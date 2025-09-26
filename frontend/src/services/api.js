@@ -14,10 +14,27 @@ const api = axios.create({
 
 // Request interceptor to add auth token
 api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('firebaseToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+  async (config) => {
+    try {
+      const token = localStorage.getItem('firebaseToken');
+      if (token) {
+        // Check if we have Firebase auth available to refresh token if needed
+        const { auth } = await import('../services/firebase');
+        if (auth.currentUser) {
+          // Get a fresh token (Firebase will handle caching and refresh automatically)
+          const freshToken = await auth.currentUser.getIdToken();
+          localStorage.setItem('firebaseToken', freshToken);
+          config.headers.Authorization = `Bearer ${freshToken}`;
+        } else {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+      }
+    } catch (error) {
+      // If token refresh fails, use the stored token
+      const token = localStorage.getItem('firebaseToken');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },
@@ -31,21 +48,44 @@ api.interceptors.response.use(
   (response) => {
     return response.data;
   },
-  (error) => {
+  async (error) => {
     const message = error.response?.data?.message || 'An error occurred';
     const isLoginRequest = error.config?.url?.includes('/auth/login');
+    const isStudentRoute = error.config?.url?.includes('/student/');
 
     if (error.response?.status === 401) {
+      // Check if the error is due to expired token
+      const errorMessage = error.response?.data?.error || '';
+      if (errorMessage.includes('expired') || errorMessage.includes('token')) {
+        try {
+          // Try to refresh the token
+          const { auth } = await import('../services/firebase');
+          if (auth.currentUser) {
+            const freshToken = await auth.currentUser.getIdToken(true); 
+            localStorage.setItem('firebaseToken', freshToken);
+            // Retry the original request
+            const originalRequest = error.config;
+            originalRequest.headers.Authorization = `Bearer ${freshToken}`;
+            return api(originalRequest);
+          }
+        } catch (refreshError) {
+          console.error('Token refresh failed:', refreshError);
+        }
+      }
+
+      // If refresh failed or other 401 error, redirect to login
       localStorage.removeItem('firebaseToken');
       window.location.href = '/';
     } else if (error.response?.status === 403) {
-      // Don't show toast for login requests with pending approval - let AuthContext handle it
-      if (!isLoginRequest) {
+      // Don't show toast for login requests or student routes with pending approval
+      // Let components handle these errors appropriately
+      if (!isLoginRequest && !isStudentRoute) {
         toast.error('Access denied');
       }
     } else if (error.response?.status === 500) {
       toast.error('Server error. Please try again later.');
-    } else {
+    } else if (!isStudentRoute) {
+      // Don't show generic toasts for student route errors - let components handle them
       toast.error(message);
     }
 
@@ -126,6 +166,7 @@ export const studentAPI = {
   }),
 
   // Profile
+  getProfile: () => api.get('/student/profile'),
   updateProfile: (profileData) => api.put('/student/profile', profileData),
 };
 

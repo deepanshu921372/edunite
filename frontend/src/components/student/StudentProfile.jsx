@@ -19,15 +19,18 @@ import LoadingSpinner from '../shared/LoadingSpinner';
 import toast from 'react-hot-toast';
 
 const StudentProfile = () => {
-  const { currentUser, userProfile, updateUserProfile } = useAuth();
+  const { currentUser, userProfile, updateUserProfile, refreshUserProfile } = useAuth();
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [profileData, setProfileData] = useState({
     displayName: '',
     email: '',
-    phone: '',
+    phoneNumber: '',
     address: '',
     dateOfBirth: '',
+    class: '',
+    schoolName: '',
+    parentPhoneNumber: '',
     rollNumber: '',
     course: '',
     year: '',
@@ -39,36 +42,126 @@ const StudentProfile = () => {
     }
   });
 
+
   useEffect(() => {
-    if (currentUser && userProfile) {
-      setProfileData({
-        displayName: currentUser.displayName || '',
-        email: currentUser.email || '',
-        phone: userProfile.phone || '',
-        address: userProfile.address || '',
-        dateOfBirth: userProfile.dateOfBirth || '',
-        rollNumber: userProfile.rollNumber || '',
-        course: userProfile.course || '',
-        year: userProfile.year || '',
-        semester: userProfile.semester || '',
-        emergencyContact: {
-          name: userProfile.emergencyContact?.name || '',
-          phone: userProfile.emergencyContact?.phone || '',
-          relation: userProfile.emergencyContact?.relation || ''
+    const fetchProfileData = async () => {
+      try {
+        if (currentUser) {
+          console.log('Fetching fresh profile data for user:', currentUser.uid);
+
+          const freshProfile = await studentAPI.getProfile();
+          console.log('Fresh profile data received:', freshProfile);
+
+          setProfileData({
+            displayName: freshProfile.name || currentUser.displayName || '',
+            email: freshProfile.email || currentUser.email || '',
+            phoneNumber: freshProfile.profile?.phoneNumber || freshProfile.phoneNumber || '',
+            address: freshProfile.profile?.address || freshProfile.address || '',
+            dateOfBirth: freshProfile.profile?.dateOfBirth ? new Date(freshProfile.profile.dateOfBirth).toISOString().split('T')[0] : (freshProfile.dateOfBirth ? new Date(freshProfile.dateOfBirth).toISOString().split('T')[0] : ''),
+            class: freshProfile.profile?.class || freshProfile.class || '',
+            schoolName: freshProfile.profile?.schoolName || freshProfile.schoolName || '',
+            parentPhoneNumber: freshProfile.profile?.parentPhoneNumber || freshProfile.parentPhoneNumber || '',
+            rollNumber: freshProfile.rollNumber || '',
+            course: freshProfile.course || '',
+            year: freshProfile.year || '',
+            semester: freshProfile.semester || '',
+            emergencyContact: {
+              name: freshProfile.emergencyContact?.name || '',
+              phone: freshProfile.emergencyContact?.phone || '',
+              relation: freshProfile.emergencyContact?.relation || ''
+            }
+          });
+
+          localStorage.setItem('userProfile', JSON.stringify(freshProfile));
         }
-      });
-    }
-  }, [currentUser, userProfile]);
+      } catch (error) {
+        console.error('Error fetching profile data:', error);
+
+        if (currentUser && userProfile) {
+          console.log('Using fallback userProfile data:', userProfile);
+          setProfileData({
+            displayName: userProfile.name || currentUser.displayName || '',
+            email: userProfile.email || currentUser.email || '',
+            phoneNumber: userProfile.profile?.phoneNumber || userProfile.phoneNumber || '',
+            address: userProfile.profile?.address || userProfile.address || '',
+            dateOfBirth: userProfile.profile?.dateOfBirth ? new Date(userProfile.profile.dateOfBirth).toISOString().split('T')[0] : (userProfile.dateOfBirth ? new Date(userProfile.dateOfBirth).toISOString().split('T')[0] : ''),
+            class: userProfile.profile?.class || userProfile.class || '',
+            schoolName: userProfile.profile?.schoolName || userProfile.schoolName || '',
+            parentPhoneNumber: userProfile.profile?.parentPhoneNumber || userProfile.parentPhoneNumber || '',
+            rollNumber: userProfile.rollNumber || '',
+            course: userProfile.course || '',
+            year: userProfile.year || '',
+            semester: userProfile.semester || '',
+            emergencyContact: {
+              name: userProfile.emergencyContact?.name || '',
+              phone: userProfile.emergencyContact?.phone || '',
+              relation: userProfile.emergencyContact?.relation || ''
+            }
+          });
+        }
+      }
+    };
+
+    fetchProfileData();
+  }, [currentUser?.uid, userProfile]); 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      await studentAPI.updateProfile(profileData);
-      await updateUserProfile(profileData);
+      const backendData = {
+        name: profileData.displayName,
+        profile: {
+          phoneNumber: profileData.phoneNumber,
+          address: profileData.address,
+          dateOfBirth: profileData.dateOfBirth ? new Date(profileData.dateOfBirth) : null,
+          parentPhoneNumber: profileData.parentPhoneNumber,
+          class: profileData.class,
+          schoolName: profileData.schoolName
+        },
+        rollNumber: profileData.rollNumber,
+        course: profileData.course,
+        year: profileData.year,
+        semester: profileData.semester,
+        emergencyContact: profileData.emergencyContact
+      };
+
+      await studentAPI.updateProfile(backendData);
+
+      const freshProfile = await studentAPI.getProfile();
+
+      localStorage.setItem('userProfile', JSON.stringify(freshProfile));
+
+      try {
+        await refreshUserProfile();
+      } catch (error) {
+        console.log('AuthContext refresh failed (expected for students):', error.message);
+      }
+
+      setProfileData({
+        displayName: freshProfile.name || currentUser.displayName || '',
+        email: freshProfile.email || currentUser.email || '',
+        phoneNumber: freshProfile.profile?.phoneNumber || freshProfile.phoneNumber || '',
+        address: freshProfile.profile?.address || freshProfile.address || '',
+        dateOfBirth: freshProfile.profile?.dateOfBirth ? new Date(freshProfile.profile.dateOfBirth).toISOString().split('T')[0] : (freshProfile.dateOfBirth ? new Date(freshProfile.dateOfBirth).toISOString().split('T')[0] : ''),
+        class: freshProfile.profile?.class || freshProfile.class || '',
+        schoolName: freshProfile.profile?.schoolName || freshProfile.schoolName || '',
+        parentPhoneNumber: freshProfile.profile?.parentPhoneNumber || freshProfile.parentPhoneNumber || '',
+        rollNumber: freshProfile.rollNumber || '',
+        course: freshProfile.course || '',
+        year: freshProfile.year || '',
+        semester: freshProfile.semester || '',
+        emergencyContact: {
+          name: freshProfile.emergencyContact?.name || '',
+          phone: freshProfile.emergencyContact?.phone || '',
+          relation: freshProfile.emergencyContact?.relation || ''
+        }
+      });
+
       setEditing(false);
       toast.success('Profile updated successfully');
+
     } catch (error) {
       console.error('Error updating profile:', error);
       toast.error('Failed to update profile');
@@ -78,14 +171,16 @@ const StudentProfile = () => {
   };
 
   const handleCancel = () => {
-    // Reset form data
     if (currentUser && userProfile) {
       setProfileData({
-        displayName: currentUser.displayName || '',
-        email: currentUser.email || '',
-        phone: userProfile.phone || '',
-        address: userProfile.address || '',
-        dateOfBirth: userProfile.dateOfBirth || '',
+        displayName: userProfile.name || currentUser.displayName || '',
+        email: userProfile.email || currentUser.email || '',
+        phoneNumber: userProfile.profile?.phoneNumber || userProfile.phoneNumber || '',
+        address: userProfile.profile?.address || userProfile.address || '',
+        dateOfBirth: userProfile.profile?.dateOfBirth ? new Date(userProfile.profile.dateOfBirth).toISOString().split('T')[0] : (userProfile.dateOfBirth ? new Date(userProfile.dateOfBirth).toISOString().split('T')[0] : ''),
+        class: userProfile.profile?.class || userProfile.class || '',
+        schoolName: userProfile.profile?.schoolName || userProfile.schoolName || '',
+        parentPhoneNumber: userProfile.profile?.parentPhoneNumber || userProfile.parentPhoneNumber || '',
         rollNumber: userProfile.rollNumber || '',
         course: userProfile.course || '',
         year: userProfile.year || '',
@@ -101,21 +196,19 @@ const StudentProfile = () => {
   };
 
   const handleInputChange = (field, value) => {
-    if (field.startsWith('emergencyContact.')) {
-      const contactField = field.replace('emergencyContact.', '');
-      setProfileData(prev => ({
-        ...prev,
-        emergencyContact: {
-          ...prev.emergencyContact,
-          [contactField]: value
-        }
-      }));
+    const updatedData = { ...profileData };
+
+    if (field.includes('.')) {
+      const [parent, child] = field.split('.');
+      updatedData[parent] = {
+        ...updatedData[parent],
+        [child]: value
+      };
     } else {
-      setProfileData(prev => ({
-        ...prev,
-        [field]: value
-      }));
+      updatedData[field] = value;
     }
+
+    setProfileData(updatedData);
   };
 
   return (
@@ -169,7 +262,6 @@ const StudentProfile = () => {
         className="bg-white shadow-md rounded-lg overflow-hidden"
       >
         <form onSubmit={handleSubmit}>
-          {/* Profile Header */}
           <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-8">
             <div className="flex items-center">
               <div className="relative">
@@ -206,10 +298,8 @@ const StudentProfile = () => {
             </div>
           </div>
 
-          {/* Profile Form */}
           <div className="px-6 py-6">
             <div className="space-y-8">
-              {/* Personal Information */}
               <div>
                 <h4 className="text-lg font-medium text-gray-900 mb-4">Personal Information</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -250,15 +340,15 @@ const StudentProfile = () => {
                     {editing ? (
                       <input
                         type="tel"
-                        value={profileData.phone}
-                        onChange={(e) => handleInputChange('phone', e.target.value)}
+                        value={profileData.phoneNumber}
+                        onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="+1 (555) 123-4567"
                       />
                     ) : (
                       <div className="flex items-center p-3 bg-gray-50 rounded-lg">
                         <Phone className="w-4 h-4 text-gray-400 mr-3" />
-                        <span className="text-gray-900">{profileData.phone || 'Not set'}</span>
+                        <span className="text-gray-900">{profileData.phoneNumber || 'Not set'}</span>
                       </div>
                     )}
                   </div>
@@ -306,7 +396,6 @@ const StudentProfile = () => {
                 </div>
               </div>
 
-              {/* Academic Information */}
               <div>
                 <h4 className="text-lg font-medium text-gray-900 mb-4">Academic Information</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -404,7 +493,6 @@ const StudentProfile = () => {
                 </div>
               </div>
 
-              {/* Emergency Contact */}
               <div>
                 <h4 className="text-lg font-medium text-gray-900 mb-4">Emergency Contact</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

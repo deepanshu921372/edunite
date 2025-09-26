@@ -30,7 +30,14 @@ const verifyFirebaseToken = async (token) => {
     const decodedToken = await admin.auth().verifyIdToken(token);
     return decodedToken;
   } catch (error) {
-    throw new Error('Invalid Firebase token');
+    console.error('Firebase token verification error:', error.code, error.message);
+    if (error.code === 'auth/id-token-expired') {
+      throw new Error('Firebase token has expired');
+    } else if (error.code === 'auth/argument-error') {
+      throw new Error('Invalid token format');
+    } else {
+      throw new Error(`Token verification failed: ${error.message}`);
+    }
   }
 };
 

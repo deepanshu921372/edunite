@@ -38,10 +38,20 @@ const userSchema = new mongoose.Schema({
   profile: {
     phoneNumber: String,
     address: String,
+    dateOfBirth: Date,
     parentPhoneNumber: String,
     class: String,
     schoolName: String,
     profileImage: String
+  },
+  rollNumber: String,
+  course: String,
+  year: String,
+  semester: String,
+  emergencyContact: {
+    name: String,
+    phone: String,
+    relation: String
   },
   createdAt: {
     type: Date,
