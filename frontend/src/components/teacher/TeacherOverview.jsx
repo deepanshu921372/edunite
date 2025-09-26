@@ -5,7 +5,8 @@ import {
   BookOpen,
   Calendar,
   FileText,
-  AlertTriangle
+  AlertTriangle,
+  TrendingUp
 } from 'lucide-react';
 import {
   PieChart,
@@ -69,26 +70,42 @@ const TeacherOverview = () => {
     {
       name: 'My Classes',
       value: stats?.totalClasses || 0,
-      icon: <BookOpen className="w-8 h-8" />,
-      color: 'bg-blue-500'
+      icon: <BookOpen className="w-7 h-7" />,
+      bgColor: 'from-blue-500 to-blue-600',
+      shadowColor: 'shadow-blue-200',
+      textColor: 'text-blue-700',
+      bgLight: 'bg-blue-50',
+      growth: '+15%'
     },
     {
       name: 'Total Students',
       value: stats?.totalStudents || 0,
-      icon: <Users className="w-8 h-8" />,
-      color: 'bg-green-500'
+      icon: <Users className="w-7 h-7" />,
+      bgColor: 'from-green-500 to-green-600',
+      shadowColor: 'shadow-green-200',
+      textColor: 'text-green-700',
+      bgLight: 'bg-green-50',
+      growth: '+8%'
     },
     {
       name: 'Today\'s Classes',
       value: stats?.todayClasses || 0,
-      icon: <Calendar className="w-8 h-8" />,
-      color: 'bg-purple-500'
+      icon: <Calendar className="w-7 h-7" />,
+      bgColor: 'from-purple-500 to-purple-600',
+      shadowColor: 'shadow-purple-200',
+      textColor: 'text-purple-700',
+      bgLight: 'bg-purple-50',
+      growth: stats?.todayClasses > 0 ? 'Today!' : ''
     },
     {
       name: 'Materials Uploaded',
       value: stats?.materialsCount || 0,
-      icon: <FileText className="w-8 h-8" />,
-      color: 'bg-orange-500'
+      icon: <FileText className="w-7 h-7" />,
+      bgColor: 'from-orange-500 to-orange-600',
+      shadowColor: 'shadow-orange-200',
+      textColor: 'text-orange-700',
+      bgLight: 'bg-orange-50',
+      growth: '+12%'
     }
   ];
 
@@ -105,34 +122,48 @@ const TeacherOverview = () => {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {quickStats.map((stat, index) => (
           <motion.div
             key={stat.name}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: index * 0.1 }}
-            className="bg-white overflow-hidden shadow-md rounded-lg hover:shadow-lg transition-shadow duration-300"
+            initial={{ opacity: 0, y: 30, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{
+              duration: 0.6,
+              delay: index * 0.1,
+              type: "spring",
+              stiffness: 100
+            }}
+            whileHover={{
+              y: -5,
+              scale: 1.02,
+              transition: { duration: 0.2 }
+            }}
+            className={`bg-white rounded-2xl shadow-lg hover:shadow-xl ${stat.shadowColor} transition-all duration-300 cursor-pointer group overflow-hidden relative`}
           >
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className={`${stat.color} text-white p-3 rounded-lg`}>
+            {/* Gradient Background Overlay */}
+            <div className={`absolute inset-0 bg-gradient-to-br ${stat.bgColor} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
+
+            <div className="p-6 relative">
+              <div className="flex items-center justify-between mb-4">
+                <div className={`${stat.bgLight} p-3 rounded-xl shadow-sm group-hover:shadow-md transition-shadow duration-300`}>
+                  <div className={stat.textColor}>
                     {stat.icon}
                   </div>
                 </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
-                      {stat.name}
-                    </dt>
-                    <dd>
-                      <div className="text-2xl font-semibold text-gray-900">
-                        {stat.value}
-                      </div>
-                    </dd>
-                  </dl>
-                </div>
+                {stat.growth && (
+                  <div className={`px-2 py-1 ${stat.bgLight} ${stat.textColor} text-xs font-semibold rounded-full flex items-center space-x-1`}>
+                    <TrendingUp className="w-3 h-3" />
+                    <span>{stat.growth}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
+                  {stat.name}
+                </h3>
+                <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
               </div>
             </div>
           </motion.div>
@@ -145,12 +176,14 @@ const TeacherOverview = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="bg-white overflow-hidden shadow-md rounded-lg"
+          className="bg-white overflow-hidden shadow-lg rounded-xl border border-gray-100"
         >
           <div className="px-6 py-12 text-center">
-            <BookOpen className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">Welcome to your teaching dashboard!</h3>
-            <p className="mt-1 text-sm text-gray-500">
+            <div className="bg-blue-50 p-4 rounded-full w-16 h-16 mx-auto flex items-center justify-center mb-4">
+              <BookOpen className="h-8 w-8 text-blue-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Welcome to your teaching dashboard!</h3>
+            <p className="text-gray-600 max-w-md mx-auto">
               Once you're assigned classes, your teaching activities and student data will appear here.
             </p>
           </div>
@@ -162,16 +195,18 @@ const TeacherOverview = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.3 }}
-        className="bg-white overflow-hidden shadow-md rounded-lg"
+        className="bg-white overflow-hidden shadow-lg rounded-xl border border-gray-100"
       >
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900">Today's Schedule</h3>
+        <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-gray-100">
+          <h3 className="text-lg font-semibold text-gray-900">Today's Schedule</h3>
         </div>
         <div className="px-6 py-8">
           <div className="text-center">
-            <Calendar className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No classes scheduled</h3>
-            <p className="mt-1 text-sm text-gray-500">
+            <div className="bg-purple-50 p-4 rounded-full w-16 h-16 mx-auto flex items-center justify-center mb-4">
+              <Calendar className="h-8 w-8 text-purple-600" />
+            </div>
+            <h3 className="text-base font-semibold text-gray-900 mb-2">No classes scheduled</h3>
+            <p className="text-gray-600 max-w-md mx-auto">
               Your class schedule will appear here when classes are scheduled.
             </p>
           </div>
@@ -183,16 +218,18 @@ const TeacherOverview = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.4 }}
-        className="bg-white overflow-hidden shadow-md rounded-lg"
+        className="bg-white overflow-hidden shadow-lg rounded-xl border border-gray-100"
       >
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900">Recent Activity</h3>
+        <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-gray-100">
+          <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
         </div>
         <div className="px-6 py-8">
           <div className="text-center">
-            <FileText className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No recent activity</h3>
-            <p className="mt-1 text-sm text-gray-500">
+            <div className="bg-orange-50 p-4 rounded-full w-16 h-16 mx-auto flex items-center justify-center mb-4">
+              <FileText className="h-8 w-8 text-orange-600" />
+            </div>
+            <h3 className="text-base font-semibold text-gray-900 mb-2">No recent activity</h3>
+            <p className="text-gray-600 max-w-md mx-auto">
               Your teaching activities will be logged here as you interact with the system.
             </p>
           </div>
