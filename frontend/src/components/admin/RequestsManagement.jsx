@@ -180,15 +180,15 @@ const RequestsManagement = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-800 shadow-sm';
       case 'approved':
-        return 'bg-green-100 text-green-800';
+        return 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 shadow-sm';
       case 'rejected':
-        return 'bg-red-100 text-red-800';
+        return 'bg-gradient-to-r from-red-100 to-rose-100 text-red-800 shadow-sm';
       case 'blocked':
-        return 'bg-gray-900 text-white';
+        return 'bg-gradient-to-r from-gray-800 to-gray-900 text-white shadow-md';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 shadow-sm';
     }
   };
 
@@ -208,7 +208,7 @@ const RequestsManagement = () => {
       </div>
 
       {/* Search and Filter */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+      <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">
@@ -218,7 +218,7 @@ const RequestsManagement = () => {
                 placeholder="Search by name or email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
               />
             </div>
           </div>
@@ -227,7 +227,7 @@ const RequestsManagement = () => {
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm font-medium"
             >
               <option value="all">All Status</option>
               <option value="pending">Pending</option>
@@ -244,7 +244,7 @@ const RequestsManagement = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="bg-white shadow-md rounded-lg overflow-hidden"
+        className="bg-white shadow-lg rounded-xl overflow-hidden border border-gray-100"
       >
         {filteredRequests.length === 0 ? (
           <div className="text-center py-12">
@@ -258,8 +258,8 @@ const RequestsManagement = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-gray-100">
+              <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     User
@@ -281,29 +281,29 @@ const RequestsManagement = () => {
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white divide-y divide-gray-50">
                 {filteredRequests.map((request, index) => (
                   <motion.tr
                     key={request._id}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.4, delay: index * 0.1 }}
-                    className="hover:bg-gray-50"
+                    className="hover:bg-blue-50 transition-colors duration-200 group"
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
-                          <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center">
+                          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow duration-200">
                             <span className="text-white text-sm font-medium">
                               {request.name.charAt(0).toUpperCase()}
                             </span>
                           </div>
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-semibold text-gray-900 group-hover:text-blue-900 transition-colors duration-200">
                             {request.name}
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-xs text-gray-500 font-mono">
                             ID: {request._id.slice(0, 8)}...
                           </div>
                         </div>
@@ -313,7 +313,7 @@ const RequestsManagement = () => {
                       <div className="text-sm text-gray-900">{request.email}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 capitalize">
+                      <span className="inline-flex px-3 py-1.5 text-xs font-semibold rounded-full bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 capitalize shadow-sm">
                         {request.requestedRole}
                       </span>
                     </td>
@@ -321,7 +321,7 @@ const RequestsManagement = () => {
                       {new Date(request.requestedAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(request.status)}`}>
+                      <span className={`inline-flex px-3 py-1.5 text-xs font-semibold rounded-full ${getStatusColor(request.status)}`}>
                         {request.status}
                       </span>
                     </td>
@@ -561,10 +561,10 @@ const RequestsManagement = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="bg-white p-6 rounded-lg shadow-sm border border-gray-200"
+          className="bg-white p-6 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-300"
         >
           <div className="flex items-center">
-            <div className="flex-shrink-0 w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+            <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-yellow-100 to-amber-100 rounded-xl flex items-center justify-center shadow-sm">
               <AlertTriangle className="w-5 h-5 text-yellow-600" />
             </div>
             <div className="ml-3">
@@ -583,7 +583,7 @@ const RequestsManagement = () => {
           className="bg-white p-6 rounded-lg shadow-sm border border-gray-200"
         >
           <div className="flex items-center">
-            <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+            <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-green-100 to-emerald-100 rounded-xl flex items-center justify-center shadow-sm">
               <Check className="w-5 h-5 text-green-600" />
             </div>
             <div className="ml-3">
@@ -602,7 +602,7 @@ const RequestsManagement = () => {
           className="bg-white p-6 rounded-lg shadow-sm border border-gray-200"
         >
           <div className="flex items-center">
-            <div className="flex-shrink-0 w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+            <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-red-100 to-rose-100 rounded-xl flex items-center justify-center shadow-sm">
               <X className="w-5 h-5 text-red-600" />
             </div>
             <div className="ml-3">
@@ -621,7 +621,7 @@ const RequestsManagement = () => {
           className="bg-white p-6 rounded-lg shadow-sm border border-gray-200"
         >
           <div className="flex items-center">
-            <div className="flex-shrink-0 w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center">
+            <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl flex items-center justify-center shadow-md">
               <Shield className="w-5 h-5 text-white" />
             </div>
             <div className="ml-3">
