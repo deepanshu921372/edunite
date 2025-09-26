@@ -4,7 +4,7 @@ import {
   BarChart3,
   Users,
   UserCheck,
-  BookOpen,
+  GraduationCap,
   Home,
   Settings
 } from 'lucide-react';
@@ -13,8 +13,8 @@ import DashboardLayout from '../../components/shared/DashboardLayout';
 // Admin Components
 import AdminOverview from '../../components/admin/AdminOverview';
 import RequestsManagement from '../../components/admin/RequestsManagement';
-import UsersManagement from '../../components/admin/UsersManagement';
-import ClassesManagement from '../../components/admin/ClassesManagement';
+import TeachersManagement from '../../components/admin/TeachersManagement';
+import StudentsManagement from '../../components/admin/StudentsManagement';
 
 const AdminDashboard = () => {
   const location = useLocation();
@@ -47,16 +47,16 @@ const AdminDashboard = () => {
       onClick: () => navigate('/admin/requests')
     },
     {
-      name: 'Users',
+      name: 'Teachers',
       icon: Users,
-      active: activeTab === 'users',
-      onClick: () => navigate('/admin/users')
+      active: activeTab === 'teachers',
+      onClick: () => navigate('/admin/teachers')
     },
     {
-      name: 'Classes',
-      icon: BookOpen,
-      active: activeTab === 'classes',
-      onClick: () => navigate('/admin/classes')
+      name: 'Students',
+      icon: GraduationCap,
+      active: activeTab === 'students',
+      onClick: () => navigate('/admin/students')
     }
   ];
 
@@ -64,8 +64,8 @@ const AdminDashboard = () => {
   const components = useMemo(() => ({
     dashboard: <AdminOverview />,
     requests: <RequestsManagement />,
-    users: <UsersManagement />,
-    classes: <ClassesManagement />
+    teachers: <TeachersManagement />,
+    students: <StudentsManagement />
   }), []);
 
   return (
@@ -78,8 +78,8 @@ const AdminDashboard = () => {
           <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="/dashboard" element={components.dashboard} />
           <Route path="/requests" element={components.requests} />
-          <Route path="/users" element={components.users} />
-          <Route path="/classes" element={components.classes} />
+          <Route path="/teachers" element={components.teachers} />
+          <Route path="/students" element={components.students} />
         </Routes>
       </div>
     </DashboardLayout>

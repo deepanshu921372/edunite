@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus,
   Search,
@@ -10,7 +10,8 @@ import {
   Calendar,
   Clock,
   Users,
-  AlertTriangle
+  AlertTriangle,
+  X
 } from 'lucide-react';
 import { adminAPI } from '../../services/api';
 import LoadingSpinner from '../shared/LoadingSpinner';
@@ -29,10 +30,31 @@ const ClassesManagement = () => {
   const [formData, setFormData] = useState({
     name: '',
     subject: '',
+    grade: '',
+    stream: '',
     description: '',
-    schedule: '',
     teacherId: ''
   });
+
+  // Grade options
+  const gradeOptions = [
+    'Nursery', 'LKG', 'UKG',
+    '1st', '2nd', '3rd', '4th', '5th',
+    '6th', '7th', '8th', '9th', '10th',
+    '11th', '12th'
+  ];
+
+  // Subject options
+  const subjectOptions = [
+    'Mathematics', 'English', 'Hindi', 'Science',
+    'Social Studies', 'Physics', 'Chemistry', 'Biology',
+    'Accountancy', 'Business Studies', 'Economics',
+    'Computer Science', 'History', 'Geography', 'Political Science',
+    'Art & Craft', 'Physical Education', 'Music'
+  ];
+
+  // Stream options for 11th and 12th
+  const streamOptions = ['Science', 'Commerce', 'Arts'];
 
   useEffect(() => {
     // Only fetch data if not already loaded
@@ -44,6 +66,25 @@ const ClassesManagement = () => {
   useEffect(() => {
     filterClasses();
   }, [classes, searchTerm]);
+
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleEscKey = (event) => {
+      if (event.key === "Escape" && showModal) {
+        handleCloseModal();
+      }
+    };
+
+    if (showModal) {
+      document.addEventListener("keydown", handleEscKey);
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.removeEventListener("keydown", handleEscKey);
+        document.body.style.overflow = 'unset';
+      };
+    }
+  }, [showModal]);
 
   const fetchData = async () => {
     // Prevent duplicate calls if already loading or loaded
@@ -74,6 +115,7 @@ const ClassesManagement = () => {
       filtered = filtered.filter(cls =>
         cls.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         cls.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        cls.grade?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         cls.teacherName?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
@@ -84,7 +126,7 @@ const ClassesManagement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.name || !formData.subject) {
+    if (!formData.name || !formData.subject || !formData.grade) {
       showToast('Please fill in all required fields', 'error');
       return;
     }
@@ -146,24 +188,30 @@ const ClassesManagement = () => {
     setFormData({
       name: classData.name,
       subject: classData.subject,
+      grade: classData.grade || '',
+      stream: classData.stream || '',
       description: classData.description || '',
-      schedule: classData.schedule || '',
       teacherId: classData.teacherId || ''
     });
     setShowModal(true);
   };
 
-  const handleCloseModal = () => {
+  const handleCloseModal = useCallback(() => {
     setShowModal(false);
     setEditingClass(null);
     setFormData({
       name: '',
       subject: '',
+      grade: '',
+      stream: '',
       description: '',
-      schedule: '',
       teacherId: ''
     });
-  };
+  }, []);
+
+  const handleOpenModal = useCallback(() => {
+    setShowModal(true);
+  }, []);
 
   if (loading) {
     return <LoadingSpinner message="Loading classes..." />;
@@ -179,8 +227,9 @@ const ClassesManagement = () => {
           </p>
         </div>
         <button
-          onClick={() => setShowModal(true)}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          onClick={handleOpenModal}
+          type="button"
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Class
@@ -235,20 +284,23 @@ const ClassesManagement = () => {
                       <h3 className="text-lg font-medium text-gray-900">
                         {classData.name}
                       </h3>
-                      <p className="text-sm text-gray-500">{classData.subject}</p>
+                      <p className="text-sm text-gray-500">
+                        {classData.grade} - {classData.subject}
+                        {classData.stream && ` (${classData.stream})`}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
                     <button
                       onClick={() => handleEdit(classData)}
-                      className="text-gray-400 hover:text-blue-600"
+                      className="text-gray-400 hover:text-blue-600 transition-colors duration-200"
                     >
                       <Edit3 className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDelete(classData.id, classData.name)}
                       disabled={processingId === classData.id}
-                      className="text-gray-400 hover:text-red-600 disabled:opacity-50"
+                      className="text-gray-400 hover:text-red-600 disabled:opacity-50 transition-colors duration-200"
                     >
                       {processingId === classData.id ? (
                         <LoadingSpinner size="sm" message="" />
@@ -266,13 +318,6 @@ const ClassesManagement = () => {
                 )}
 
                 <div className="mt-4 space-y-2">
-                  {classData.schedule && (
-                    <div className="flex items-center text-sm text-gray-500">
-                      <Clock className="w-4 h-4 mr-2" />
-                      {classData.schedule}
-                    </div>
-                  )}
-
                   <div className="flex items-center justify-between">
                     <div className="flex items-center text-sm text-gray-500">
                       <User className="w-4 h-4 mr-2" />
@@ -319,126 +364,186 @@ const ClassesManagement = () => {
       </motion.div>
 
       {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={handleCloseModal} />
+      <AnimatePresence>
+        {showModal && (
+          <motion.div 
+            className="fixed inset-0 z-50 overflow-y-auto"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+              {/* Backdrop */}
+              <motion.div 
+                className="fixed inset-0 bg-gray-500 bg-opacity-75"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={handleCloseModal}
+              />
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
-            >
-              <form onSubmit={handleSubmit}>
-                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                  <div className="sm:flex sm:items-start">
-                    <div className="w-full">
-                      <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-                        {editingClass ? 'Edit Class' : 'Create New Class'}
-                      </h3>
+              {/* Center modal */}
+              <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">
+                &#8203;
+              </span>
 
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Class Name *
-                          </label>
-                          <input
-                            type="text"
-                            required
-                            value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="e.g., Advanced Mathematics"
-                          />
-                        </div>
+              <motion.div
+                className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full relative"
+                initial={{ opacity: 0, scale: 0.95, y: 50 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 50 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Close button */}
+                <button
+                  onClick={handleCloseModal}
+                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10 transition-colors duration-200"
+                >
+                  <X className="w-5 h-5" />
+                </button>
 
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Subject *
-                          </label>
-                          <input
-                            type="text"
-                            required
-                            value={formData.subject}
-                            onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="e.g., Mathematics"
-                          />
-                        </div>
+                <form onSubmit={handleSubmit}>
+                  <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div className="sm:flex sm:items-start">
+                      <div className="w-full">
+                        <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4 pr-8">
+                          {editingClass ? 'Edit Class' : 'Create New Class'}
+                        </h3>
 
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Description
-                          </label>
-                          <textarea
-                            value={formData.description}
-                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                            rows={3}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Brief description of the class..."
-                          />
-                        </div>
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Class Name *
+                            </label>
+                            <input
+                              type="text"
+                              required
+                              value={formData.name}
+                              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              placeholder="e.g., Advanced Mathematics"
+                            />
+                          </div>
 
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Schedule
-                          </label>
-                          <input
-                            type="text"
-                            value={formData.schedule}
-                            onChange={(e) => setFormData({ ...formData, schedule: e.target.value })}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="e.g., Mon/Wed/Fri 10:00 AM - 11:30 AM"
-                          />
-                        </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Grade *
+                            </label>
+                            <select
+                              required
+                              value={formData.grade}
+                              onChange={(e) => setFormData({ ...formData, grade: e.target.value })}
+                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            >
+                              <option value="">Select a grade</option>
+                              {gradeOptions.map((grade) => (
+                                <option key={grade} value={grade}>
+                                  {grade}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
 
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Assign Teacher
-                          </label>
-                          <select
-                            value={formData.teacherId}
-                            onChange={(e) => setFormData({ ...formData, teacherId: e.target.value })}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          >
-                            <option value="">Select a teacher (optional)</option>
-                            {teachers.map(teacher => (
-                              <option key={teacher.uid} value={teacher.uid}>
-                                {teacher.displayName}
-                              </option>
-                            ))}
-                          </select>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Subject *
+                            </label>
+                            <select
+                              required
+                              value={formData.subject}
+                              onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            >
+                              <option value="">Select a subject</option>
+                              {subjectOptions.map((subject) => (
+                                <option key={subject} value={subject}>
+                                  {subject}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {(formData.grade === '11th' || formData.grade === '12th') && (
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Stream
+                              </label>
+                              <select
+                                value={formData.stream}
+                                onChange={(e) => setFormData({ ...formData, stream: e.target.value })}
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              >
+                                <option value="">Select a stream</option>
+                                {streamOptions.map((stream) => (
+                                  <option key={stream} value={stream}>
+                                    {stream}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Description
+                            </label>
+                            <textarea
+                              value={formData.description}
+                              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                              rows={3}
+                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              placeholder="Brief description of the class..."
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Assign Teacher
+                            </label>
+                            <select
+                              value={formData.teacherId}
+                              onChange={(e) => setFormData({ ...formData, teacherId: e.target.value })}
+                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            >
+                              <option value="">Select a teacher (optional)</option>
+                              {teachers.map(teacher => (
+                                <option key={teacher.uid || teacher._id} value={teacher.uid || teacher._id}>
+                                  {teacher.displayName || teacher.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                  <button
-                    type="submit"
-                    disabled={processingId === 'form'}
-                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
-                  >
-                    {processingId === 'form' ? (
-                      <LoadingSpinner size="sm" message="" />
-                    ) : (
-                      editingClass ? 'Update Class' : 'Create Class'
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleCloseModal}
-                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-        </div>
-      )}
+                  <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button
+                      type="submit"
+                      disabled={processingId === 'form'}
+                      className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 transition-colors duration-200"
+                    >
+                      {processingId === 'form' ? (
+                        <LoadingSpinner size="sm" message="" />
+                      ) : (
+                        editingClass ? 'Update Class' : 'Create Class'
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCloseModal}
+                      className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors duration-200"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

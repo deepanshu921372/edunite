@@ -211,14 +211,14 @@ router.post('/block-user', authenticateToken, requireRole(['admin']), async (req
 router.get('/users', authenticateToken, requireRole(['admin']), async (req, res) => {
   try {
     const { role } = req.query;
-    const filter = { isApproved: true };
+    const filter = {};
 
     if (role && ['student', 'teacher'].includes(role)) {
       filter.role = role;
     }
 
     const users = await User.find(filter)
-      .select('name email role profile createdAt displayName uid')
+      .select('name email role profile createdAt displayName uid isApproved')
       .sort({ createdAt: -1 });
 
     res.json({

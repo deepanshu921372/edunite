@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
   Calendar,
@@ -8,30 +8,39 @@ import {
   Edit3,
   Trash2,
   ChevronLeft,
-  ChevronRight
-} from 'lucide-react';
-import { teacherAPI } from '../../services/api';
-import LoadingSpinner from '../shared/LoadingSpinner';
-import toast from 'react-hot-toast';
+  ChevronRight,
+  X,
+} from "lucide-react";
+import { teacherAPI } from "../../services/api";
+import LoadingSpinner from "../shared/LoadingSpinner";
+import toast from "react-hot-toast";
 
 const TimetableManagement = () => {
   const [timetable, setTimetable] = useState([]);
   const [classes, setClasses] = useState([]);
+  const [teacherProfile, setTeacherProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingEntry, setEditingEntry] = useState(null);
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [processingId, setProcessingId] = useState(null);
   const [formData, setFormData] = useState({
-    classId: '',
-    dayOfWeek: '',
-    startTime: '',
-    endTime: '',
-    location: ''
+    grade: "",
+    subject: "",
+    daysOfWeek: [],
+    startTime: "",
+    endTime: "",
+    location: "",
   });
 
   const daysOfWeek = [
-    'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
   ];
 
   useEffect(() => {
@@ -41,31 +50,48 @@ const TimetableManagement = () => {
   // Handle ESC key to close modal
   useEffect(() => {
     const handleEscKey = (event) => {
-      if (event.key === 'Escape' && showModal) {
+      if (event.key === "Escape" && showModal) {
         handleCloseModal();
       }
     };
 
     if (showModal) {
-      document.addEventListener('keydown', handleEscKey);
+      document.addEventListener("keydown", handleEscKey);
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = 'hidden';
       return () => {
-        document.removeEventListener('keydown', handleEscKey);
+        document.removeEventListener("keydown", handleEscKey);
+        document.body.style.overflow = 'unset';
       };
     }
   }, [showModal]);
 
   const fetchData = async () => {
     try {
-      const [timetableResponse, classesResponse] = await Promise.all([
+      const [timetableResponse, classesResponse, profileResponse] = await Promise.all([
         teacherAPI.getTimetable(),
-        teacherAPI.getMyClasses()
+        teacherAPI.getMyClasses(),
+        teacherAPI.getProfile(),
       ]);
 
-      setTimetable(timetableResponse.data || []);
-      setClasses(classesResponse.data || []);
+      // Handle different response structures from backend
+      const timetableData = Array.isArray(timetableResponse)
+        ? timetableResponse
+        : timetableResponse?.data || [];
+      const classesData = Array.isArray(classesResponse)
+        ? classesResponse
+        : classesResponse?.data || [];
+      const profileData = profileResponse?.data || profileResponse;
+
+      setTimetable(timetableData);
+      setClasses(classesData);
+      setTeacherProfile(profileData);
+
+      console.log('Classes:', classesData);
+      console.log('Profile:', profileData);
     } catch (error) {
-      console.error('Error fetching data:', error);
-      toast.error('Failed to load timetable data');
+      console.error("Error fetching data:", error);
+      toast.error("Failed to load timetable data");
     } finally {
       setLoading(false);
     }
@@ -74,49 +100,77 @@ const TimetableManagement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.classId || !formData.dayOfWeek || !formData.startTime || !formData.endTime) {
-      toast.error('Please fill in all required fields');
+    if (
+      !formData.grade ||
+      !formData.subject ||
+      formData.daysOfWeek.length === 0 ||
+      !formData.startTime ||
+      !formData.endTime
+    ) {
+      toast.error("Please fill in all required fields");
       return;
     }
 
     if (formData.startTime >= formData.endTime) {
-      toast.error('End time must be after start time');
+      toast.error("End time must be after start time");
       return;
     }
 
-    setProcessingId('form');
+    setProcessingId("form");
     try {
-      if (editingEntry) {
-        await teacherAPI.updateTimetableEntry(editingEntry.id, formData);
-        toast.success('Timetable entry updated successfully');
-      } else {
-        await teacherAPI.createTimetableEntry(formData);
-        toast.success('Timetable entry created successfully');
+      // Find or create a class for this grade-subject combination
+      let targetClass = classes.find(cls =>
+        cls.grade === formData.grade &&
+        cls.subject === formData.subject
+      );
+
+      if (!targetClass) {
+        toast.error(`No class found for ${formData.grade} - ${formData.subject}. Please contact admin to create this class.`);
+        return;
       }
+
+      // Create schedule array for the timetable API
+      const scheduleData = formData.daysOfWeek.map(day => ({
+        day: day,
+        timeSlots: [{
+          startTime: formData.startTime,
+          endTime: formData.endTime,
+          subject: formData.subject
+        }]
+      }));
+
+      const submissionData = {
+        classId: targetClass._id || targetClass.id,
+        schedule: scheduleData
+      };
+
+      await teacherAPI.createTimetableEntry(submissionData);
+      toast.success("Timetable entries created successfully");
 
       fetchData();
       handleCloseModal();
     } catch (error) {
-      console.error('Error saving timetable entry:', error);
-      toast.error('Failed to save timetable entry');
+      console.error("Error saving timetable entry:", error);
+      toast.error("Failed to save timetable entry");
     } finally {
       setProcessingId(null);
     }
   };
 
   const handleDelete = async (entryId) => {
-    if (!window.confirm('Are you sure you want to delete this timetable entry?')) {
+    if (
+      !window.confirm("Are you sure you want to delete this timetable entry?")
+    ) {
       return;
     }
 
     setProcessingId(entryId);
     try {
-      await teacherAPI.deleteTimetableEntry(entryId);
-      toast.success('Timetable entry deleted successfully');
-      fetchData();
+      // For now, we'll just show a message since the backend doesn't support individual entry deletion
+      toast.error("Individual entry deletion not supported yet. Please contact admin.");
     } catch (error) {
-      console.error('Error deleting timetable entry:', error);
-      toast.error('Failed to delete timetable entry');
+      console.error("Error deleting timetable entry:", error);
+      toast.error("Failed to delete timetable entry");
     } finally {
       setProcessingId(null);
     }
@@ -124,27 +178,35 @@ const TimetableManagement = () => {
 
   const handleEdit = (entry) => {
     setEditingEntry(entry);
+    const classInfo = classes.find((c) => c._id === entry.class || c.id === entry.class);
+
     setFormData({
-      classId: entry.classId,
-      dayOfWeek: entry.dayOfWeek,
+      grade: classInfo?.grade || "",
+      subject: classInfo?.subject || entry.subject || "",
+      daysOfWeek: entry.day ? [entry.day] : [],
       startTime: entry.startTime,
       endTime: entry.endTime,
-      location: entry.location || ''
+      location: entry.location || "",
     });
     setShowModal(true);
   };
 
-  const handleCloseModal = () => {
+  const handleCloseModal = useCallback(() => {
     setShowModal(false);
     setEditingEntry(null);
     setFormData({
-      classId: '',
-      dayOfWeek: '',
-      startTime: '',
-      endTime: '',
-      location: ''
+      grade: "",
+      subject: "",
+      daysOfWeek: [],
+      startTime: "",
+      endTime: "",
+      location: "",
     });
-  };
+  }, []);
+
+  const handleOpenModal = useCallback(() => {
+    setShowModal(true);
+  }, []);
 
   const getWeekDates = (date) => {
     const week = [];
@@ -163,13 +225,36 @@ const TimetableManagement = () => {
 
   const formatTime = (time) => {
     return new Date(`1970-01-01T${time}`).toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit'
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const getClassesForDay = (dayName) => {
-    return timetable.filter(entry => entry.dayOfWeek === dayName);
+    const dayClasses = [];
+
+    timetable.forEach(timetableEntry => {
+      if (timetableEntry.schedule) {
+        timetableEntry.schedule.forEach(scheduleItem => {
+          if (scheduleItem.day === dayName) {
+            scheduleItem.timeSlots.forEach(timeSlot => {
+              dayClasses.push({
+                id: `${timetableEntry._id}-${scheduleItem.day}-${timeSlot.startTime}`,
+                timetableId: timetableEntry._id,
+                class: timetableEntry.class,
+                day: scheduleItem.day,
+                startTime: timeSlot.startTime,
+                endTime: timeSlot.endTime,
+                subject: timeSlot.subject,
+                location: timetableEntry.location || ''
+              });
+            });
+          }
+        });
+      }
+    });
+
+    return dayClasses;
   };
 
   const weekDates = getWeekDates(currentWeek);
@@ -182,14 +267,17 @@ const TimetableManagement = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Timetable Management</h2>
+          <h2 className="text-2xl font-bold text-gray-900">
+            Timetable Management
+          </h2>
           <p className="mt-2 text-gray-600">
             Manage your class schedule and organize your teaching timetable.
           </p>
         </div>
         <button
-          onClick={() => setShowModal(true)}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          onClick={handleOpenModal}
+          type="button"
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Class
@@ -212,7 +300,8 @@ const TimetableManagement = () => {
           </button>
 
           <h3 className="text-lg font-medium text-gray-900">
-            Week of {weekDates[0].toLocaleDateString()} - {weekDates[6].toLocaleDateString()}
+            Week of {weekDates[0].toLocaleDateString()} -{" "}
+            {weekDates[6].toLocaleDateString()}
           </h3>
 
           <button
@@ -242,7 +331,10 @@ const TimetableManagement = () => {
               <div className="text-center mb-4">
                 <h3 className="font-medium text-gray-900">{day}</h3>
                 <p className="text-sm text-gray-500">
-                  {weekDates[dayIndex].toLocaleDateString([], { day: 'numeric', month: 'short' })}
+                  {weekDates[dayIndex].toLocaleDateString([], {
+                    day: "numeric",
+                    month: "short",
+                  })}
                 </p>
               </div>
 
@@ -258,11 +350,18 @@ const TimetableManagement = () => {
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
                         <h4 className="text-sm font-medium text-blue-900 truncate">
-                          {classes.find(c => c.id === entry.classId)?.name || 'Unknown Class'}
+                          {(() => {
+                            const classInfo = classes.find((c) => c._id === entry.class || c.id === entry.class);
+                            if (classInfo) {
+                              return `${classInfo.grade} - ${classInfo.subject}`;
+                            }
+                            return entry.subject ? `${entry.subject}` : "Unknown Class";
+                          })()}
                         </h4>
                         <div className="flex items-center mt-1 text-xs text-blue-700">
                           <Clock className="w-3 h-3 mr-1" />
-                          {formatTime(entry.startTime)} - {formatTime(entry.endTime)}
+                          {formatTime(entry.startTime)} -{" "}
+                          {formatTime(entry.endTime)}
                         </div>
                         {entry.location && (
                           <div className="flex items-center mt-1 text-xs text-blue-700">
@@ -307,132 +406,224 @@ const TimetableManagement = () => {
       </motion.div>
 
       {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={handleCloseModal} />
+      <AnimatePresence>
+        {showModal && (
+          <motion.div 
+            className="fixed inset-0 z-50 overflow-y-auto"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+              {/* Backdrop */}
+              <motion.div 
+                className="fixed inset-0 bg-gray-500 bg-opacity-75"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={handleCloseModal}
+              />
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <form onSubmit={handleSubmit}>
-                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                  <div className="sm:flex sm:items-start">
-                    <div className="w-full">
-                      <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-                        {editingEntry ? 'Edit Class Schedule' : 'Add Class Schedule'}
-                      </h3>
+              {/* Center modal */}
+              <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">
+                &#8203;
+              </span>
 
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Class *
-                          </label>
-                          <select
-                            required
-                            value={formData.classId}
-                            onChange={(e) => setFormData({ ...formData, classId: e.target.value })}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          >
-                            <option value="">Select a class</option>
-                            {classes.map(cls => (
-                              <option key={cls.id} value={cls.id}>
-                                {cls.name} ({cls.subject})
-                              </option>
-                            ))}
-                          </select>
-                        </div>
+              <motion.div
+                className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full relative"
+                initial={{ opacity: 0, scale: 0.95, y: 50 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 50 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Close button */}
+                <button
+                  onClick={handleCloseModal}
+                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10"
+                >
+                  <X className="w-5 h-5" />
+                </button>
 
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Day of Week *
-                          </label>
-                          <select
-                            required
-                            value={formData.dayOfWeek}
-                            onChange={(e) => setFormData({ ...formData, dayOfWeek: e.target.value })}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          >
-                            <option value="">Select a day</option>
-                            {daysOfWeek.map(day => (
-                              <option key={day} value={day}>{day}</option>
-                            ))}
-                          </select>
-                        </div>
+                <form onSubmit={handleSubmit}>
+                  <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div className="sm:flex sm:items-start">
+                      <div className="w-full">
+                        <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4 pr-8">
+                          {editingEntry ? "Edit Class Schedule" : "Add Class Schedule"}
+                        </h3>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-4">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Start Time *
+                              Grade *
                             </label>
-                            <input
-                              type="time"
+                            <select
                               required
-                              value={formData.startTime}
-                              onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                              value={formData.grade}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  grade: e.target.value,
+                                })
+                              }
                               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            />
+                            >
+                              <option value="">Select a grade</option>
+                              {teacherProfile?.profile?.teachingGrades?.map((grade) => (
+                                <option key={grade} value={grade}>
+                                  {grade}
+                                </option>
+                              )) || (
+                                <option disabled>No grades available</option>
+                              )}
+                            </select>
                           </div>
 
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                              End Time *
+                              Subject *
+                            </label>
+                            <select
+                              required
+                              value={formData.subject}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  subject: e.target.value,
+                                })
+                              }
+                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            >
+                              <option value="">Select a subject</option>
+                              {teacherProfile?.profile?.teachingSubjects?.map((subject) => (
+                                <option key={subject} value={subject}>
+                                  {subject}
+                                </option>
+                              )) || (
+                                <option disabled>No subjects available</option>
+                              )}
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Days of Week * (Multiple Selection)
+                            </label>
+                            <div className="grid grid-cols-2 gap-2 border border-gray-300 rounded-lg p-3">
+                              {daysOfWeek.map((day) => (
+                                <label key={day} className="flex items-center space-x-2 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={formData.daysOfWeek.includes(day)}
+                                    onChange={(e) => {
+                                      if (e.target.checked) {
+                                        setFormData({
+                                          ...formData,
+                                          daysOfWeek: [...formData.daysOfWeek, day],
+                                        });
+                                      } else {
+                                        setFormData({
+                                          ...formData,
+                                          daysOfWeek: formData.daysOfWeek.filter((d) => d !== day),
+                                        });
+                                      }
+                                    }}
+                                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                  />
+                                  <span className="text-sm text-gray-700">{day}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Start Time *
+                              </label>
+                              <input
+                                type="time"
+                                required
+                                value={formData.startTime}
+                                onChange={(e) =>
+                                  setFormData({
+                                    ...formData,
+                                    startTime: e.target.value,
+                                  })
+                                }
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                End Time *
+                              </label>
+                              <input
+                                type="time"
+                                required
+                                value={formData.endTime}
+                                onChange={(e) =>
+                                  setFormData({
+                                    ...formData,
+                                    endTime: e.target.value,
+                                  })
+                                }
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Location
                             </label>
                             <input
-                              type="time"
-                              required
-                              value={formData.endTime}
-                              onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                              type="text"
+                              value={formData.location}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  location: e.target.value,
+                                })
+                              }
                               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              placeholder="e.g., Room A-101, Lab B-202"
                             />
                           </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Location
-                          </label>
-                          <input
-                            type="text"
-                            value={formData.location}
-                            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="e.g., Room A-101, Lab B-202"
-                          />
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                  <button
-                    type="submit"
-                    disabled={processingId === 'form'}
-                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
-                  >
-                    {processingId === 'form' ? (
-                      <LoadingSpinner size="sm" message="" />
-                    ) : (
-                      editingEntry ? 'Update Schedule' : 'Add Schedule'
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleCloseModal}
-                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-        </div>
-      )}
+                  <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button
+                      type="submit"
+                      disabled={processingId === "form"}
+                      className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
+                    >
+                      {processingId === "form" ? (
+                        <LoadingSpinner size="sm" message="" />
+                      ) : editingEntry ? (
+                        "Update Schedule"
+                      ) : (
+                        "Add Schedule"
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCloseModal}
+                      className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
