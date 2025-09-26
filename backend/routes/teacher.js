@@ -37,6 +37,59 @@ const upload = multer({
   }
 });
 
+// Get teacher profile
+router.get('/profile', authenticateToken, requireRole(['teacher']), requireApproval, async (req, res) => {
+  try {
+    const teacher = await User.findById(req.user._id).select('-password');
+    if (!teacher) {
+      return res.status(404).json({ error: 'Teacher not found' });
+    }
+
+    res.json({
+      success: true,
+      data: teacher
+    });
+  } catch (error) {
+    console.error('Get teacher profile error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Update teacher profile
+router.put('/profile', authenticateToken, requireRole(['teacher']), requireApproval, async (req, res) => {
+  try {
+    const teacherId = req.user._id;
+    const {
+      name,
+      profile
+    } = req.body;
+
+    const updateData = {};
+
+    if (name) updateData.name = name;
+    if (profile) updateData.profile = { ...req.user.profile, ...profile };
+
+    const updatedTeacher = await User.findByIdAndUpdate(
+      teacherId,
+      updateData,
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    if (!updatedTeacher) {
+      return res.status(404).json({ error: 'Teacher not found' });
+    }
+
+    res.json({
+      success: true,
+      data: updatedTeacher,
+      message: 'Profile updated successfully'
+    });
+  } catch (error) {
+    console.error('Update teacher profile error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Get teacher dashboard stats
 router.get('/stats', authenticateToken, requireRole(['teacher']), requireApproval, async (req, res) => {
   try {

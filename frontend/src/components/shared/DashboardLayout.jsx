@@ -133,11 +133,11 @@ const DashboardLayout = ({ children, navigation, title }) => {
 
             <div className="ml-4 flex items-center md:ml-6">
               <div className="flex items-center space-x-3">
-                <img
-                  className="h-8 w-8 rounded-full"
-                  src={currentUser?.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.displayName || 'User')}&background=3b82f6&color=fff`}
-                  alt="Profile"
-                />
+                <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
+                  <span className="text-white text-sm font-medium">
+                    {(currentUser?.displayName || 'U').charAt(0).toUpperCase()}
+                  </span>
+                </div>
                 <div className="hidden md:block">
                   <div className="text-base font-medium leading-none text-gray-900">
                     {currentUser?.displayName}

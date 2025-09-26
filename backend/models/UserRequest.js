@@ -44,7 +44,6 @@ const userRequestSchema = new mongoose.Schema({
     parentPhoneNumber: String,
     class: String,
     schoolName: String,
-    profileImage: String
   }
 });
 

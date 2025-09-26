@@ -21,17 +21,6 @@ const createFileFilter = (allowedTypes, maxSize = 50 * 1024 * 1024) => {
 
 // Different upload configurations
 const uploads = {
-  // Profile images - smaller size limit, only images
-  profile: multer({
-    storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
-    fileFilter: createFileFilter([
-      'image/jpeg',
-      'image/png',
-      'image/gif',
-      'image/webp'
-    ])
-  }),
 
   // Study materials - larger size limit, documents and images
   studyMaterial: multer({
@@ -84,8 +73,6 @@ const getCloudinaryFolder = (category, userRole) => {
   const baseFolder = 'edunite';
 
   switch (category) {
-    case 'profile':
-      return `${baseFolder}/profiles`;
     case 'study-material':
       return `${baseFolder}/study-materials`;
     case 'document':
@@ -97,35 +84,6 @@ const getCloudinaryFolder = (category, userRole) => {
   }
 };
 
-// Upload profile image
-router.post('/profile-image', authenticateToken, requireApproval, uploads.profile.single('image'), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No image file provided' });
-    }
-
-    const folder = getCloudinaryFolder('profile', req.user.role);
-    const result = await uploadToCloudinary(req.file.buffer, folder);
-
-    res.json({
-      success: true,
-      file: {
-        url: result.secure_url,
-        publicId: result.public_id,
-        originalName: req.file.originalname,
-        size: req.file.size,
-        format: result.format
-      },
-      message: 'Profile image uploaded successfully'
-    });
-  } catch (error) {
-    console.error('Profile image upload error:', error);
-    res.status(500).json({
-      error: 'Failed to upload profile image',
-      details: error.message
-    });
-  }
-});
 
 // Upload study material (teachers only)
 router.post('/study-material', authenticateToken, requireRole(['teacher']), requireApproval, uploads.studyMaterial.single('file'), async (req, res) => {

@@ -85,7 +85,6 @@ export const AuthProvider = ({ children }) => {
               uid: firebaseUser.uid,
               email: firebaseUser.email,
               displayName: firebaseUser.displayName,
-              photoURL: firebaseUser.photoURL,
             };
 
             const response = await authAPI.login(userData);
@@ -182,7 +181,6 @@ export const AuthProvider = ({ children }) => {
         uid: result.user.uid,
         email: result.user.email,
         displayName: result.user.displayName,
-        photoURL: result.user.photoURL,
       };
 
       const response = await authAPI.login(userData);

@@ -6,12 +6,14 @@ import {
   Users,
   FileText,
   BarChart3,
-  BookOpen
+  BookOpen,
+  User
 } from 'lucide-react';
 import DashboardLayout from '../../components/shared/DashboardLayout';
 
 // Teacher Components
 import TeacherOverview from '../../components/teacher/TeacherOverview';
+import TeacherProfile from '../../components/teacher/TeacherProfile';
 import TimetableManagement from '../../components/teacher/TimetableManagement';
 import AttendanceManagement from '../../components/teacher/AttendanceManagement';
 import MaterialsManagement from '../../components/teacher/MaterialsManagement';
@@ -23,6 +25,7 @@ const TeacherDashboard = () => {
   // Get current tab from URL path
   const getCurrentTab = () => {
     const path = location.pathname;
+    if (path.includes('/profile')) return 'profile';
     if (path.includes('/timetable')) return 'timetable';
     if (path.includes('/attendance')) return 'attendance';
     if (path.includes('/materials')) return 'materials';
@@ -52,6 +55,12 @@ const TeacherDashboard = () => {
       onClick: () => handleTabChange('dashboard')
     },
     {
+      name: 'Profile',
+      icon: User,
+      active: activeTab === 'profile',
+      onClick: () => handleTabChange('profile')
+    },
+    {
       name: 'Timetable',
       icon: Calendar,
       active: activeTab === 'timetable',
@@ -75,6 +84,8 @@ const TeacherDashboard = () => {
     switch (activeTab) {
       case 'dashboard':
         return <TeacherOverview />;
+      case 'profile':
+        return <TeacherProfile />;
       case 'timetable':
         return <TimetableManagement />;
       case 'attendance':

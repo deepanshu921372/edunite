@@ -9,7 +9,6 @@ import {
   Edit3,
   Save,
   X,
-  Camera,
   School,
   BookOpen,
   Users
@@ -298,43 +297,26 @@ const StudentProfile = () => {
       >
         <form onSubmit={handleSubmit}>
           <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-8">
-            <div className="flex items-center">
-              <div className="relative">
-                <img
-                  className="h-24 w-24 rounded-full border-4 border-white shadow-lg"
-                  src={currentUser?.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.displayName)}&background=3b82f6&color=fff&size=128`}
-                  alt="Profile"
-                />
-                {editing && (
-                  <button
-                    type="button"
-                    className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-lg hover:bg-gray-50 transition-colors duration-200"
-                  >
-                    <Camera className="w-4 h-4 text-gray-600" />
-                  </button>
-                )}
+            <div className="text-white">
+              <h3 className="text-2xl font-bold">{profileData.displayName}</h3>
+              <p className="text-blue-100 mt-1">{profileData.email}</p>
+              <div className="flex items-center mt-3">
+                <School className="w-4 h-4 mr-2" />
+                <span className="text-blue-200">
+                  {profileData.grade && profileData.stream
+                    ? `${profileData.grade} Grade • ${profileData.stream} Stream`
+                    : profileData.grade
+                      ? `${profileData.grade} Grade`
+                      : 'Grade not set'
+                  }
+                </span>
               </div>
-              <div className="ml-6 text-white">
-                <h3 className="text-2xl font-bold">{profileData.displayName}</h3>
-                <p className="text-blue-100">{profileData.email}</p>
+              {profileData.admissionNumber && (
                 <div className="flex items-center mt-2">
-                  <School className="w-4 h-4 mr-2" />
-                  <span className="text-blue-200">
-                    {profileData.grade && profileData.stream
-                      ? `${profileData.grade} Grade • ${profileData.stream} Stream`
-                      : profileData.grade
-                        ? `${profileData.grade} Grade`
-                        : 'Grade not set'
-                    }
-                  </span>
+                  <BookOpen className="w-4 h-4 mr-2" />
+                  <span className="text-blue-200">Admission No: {profileData.admissionNumber}</span>
                 </div>
-                {profileData.admissionNumber && (
-                  <div className="flex items-center mt-1">
-                    <BookOpen className="w-4 h-4 mr-2" />
-                    <span className="text-blue-200">Admission No: {profileData.admissionNumber}</span>
-                  </div>
-                )}
-              </div>
+              )}
             </div>
           </div>
 

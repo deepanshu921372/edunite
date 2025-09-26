@@ -147,6 +147,10 @@ export const teacherAPI = {
   uploadMaterial: (materialData) => api.post('/teacher/materials', materialData),
   getMaterials: () => api.get('/teacher/materials'),
   deleteMaterial: (materialId) => api.delete(`/teacher/materials/${materialId}`),
+
+  // Profile
+  getProfile: () => api.get('/teacher/profile'),
+  updateProfile: (profileData) => api.put('/teacher/profile', profileData),
 };
 
 // Student API

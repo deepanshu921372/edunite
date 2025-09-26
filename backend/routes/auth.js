@@ -115,7 +115,7 @@ const getUserRoleAndApproval = (email) => {
 // Combined login route (handles both signup and signin)
 router.post('/login', async (req, res) => {
   try {
-    const { uid, email, displayName, photoURL } = req.body;
+    const { uid, email, displayName } = req.body;
 
     if (!uid || !email) {
       return res.status(400).json({ error: 'User ID and email are required' });
@@ -156,7 +156,6 @@ router.post('/login', async (req, res) => {
             name: user.name,
             requestedRole: user.role,
             userProfile: {
-              profileImage: photoURL
             }
           });
           await newRequest.save();
@@ -167,7 +166,6 @@ router.post('/login', async (req, res) => {
           email: user.email,
           name: user.name,
           displayName: displayName || user.name,
-          photoURL: photoURL,
           role: user.role,
           isApproved: user.isApproved,
           _id: user._id
@@ -185,7 +183,6 @@ router.post('/login', async (req, res) => {
       const userResponse = {
         ...user.toObject(),
         displayName: displayName || user.name,
-        photoURL: photoURL
       };
 
       // Store user details in localStorage format for frontend
@@ -194,7 +191,6 @@ router.post('/login', async (req, res) => {
         email: user.email,
         name: user.name,
         displayName: displayName || user.name,
-        photoURL: photoURL,
         role: user.role,
         isApproved: user.isApproved,
         _id: user._id
@@ -229,7 +225,6 @@ router.post('/login', async (req, res) => {
             name: user.name,
             requestedRole: user.role,
             userProfile: {
-              profileImage: photoURL
             }
           });
           await userRequest.save();
@@ -240,7 +235,6 @@ router.post('/login', async (req, res) => {
           email: user.email,
           name: user.name,
           displayName: displayName || user.name,
-          photoURL: photoURL,
           role: user.role,
           isApproved: user.isApproved,
           _id: user._id
@@ -281,8 +275,7 @@ router.post('/login', async (req, res) => {
               email: existingUser.email,
               name: existingUser.name,
               displayName: displayName || existingUser.name,
-              photoURL: photoURL,
-              role: existingUser.role,
+                  role: existingUser.role,
               isApproved: existingUser.isApproved,
               _id: existingUser._id
             };
@@ -337,7 +330,7 @@ router.put('/profile', async (req, res) => {
     }
 
     // Profile nested fields
-    const profileFields = ['phoneNumber', 'address', 'class', 'schoolName', 'profileImage', 'parentPhoneNumber'];
+    const profileFields = ['phoneNumber', 'address', 'class', 'schoolName', 'parentPhoneNumber'];
     const profileUpdates = {};
 
     profileFields.forEach(field => {
@@ -404,7 +397,6 @@ router.get('/profile', async (req, res) => {
       address: user.profile?.address,
       class: user.profile?.class,
       schoolName: user.profile?.schoolName,
-      profileImage: user.profile?.profileImage,
       parentPhoneNumber: user.profile?.parentPhoneNumber
     };
 

@@ -4,23 +4,6 @@ const { authenticateToken, requireApproval } = require('../middleware/auth');
 const User = require('../models/User');
 const Class = require('../models/Class');
 const Attendance = require('../models/Attendance');
-const { uploadToCloudinary } = require('../config/cloudinary');
-const multer = require('multer');
-
-// Configure multer for file uploads
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
-  },
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed'), false);
-    }
-  }
-});
 
 // Get user profile
 router.get('/profile', authenticateToken, async (req, res) => {
@@ -84,35 +67,6 @@ router.put('/profile', authenticateToken, requireApproval, async (req, res) => {
   }
 });
 
-// Upload profile image
-router.post('/profile/image', authenticateToken, requireApproval, upload.single('profileImage'), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No image file provided' });
-    }
-
-    // Upload to Cloudinary
-    const result = await uploadToCloudinary(req.file.buffer, 'edunite/profiles');
-
-    // Update user profile with image URL
-    const updatedUser = await User.findByIdAndUpdate(
-      req.user._id,
-      {
-        'profile.profileImage': result.secure_url
-      },
-      { new: true }
-    ).select('-firebaseUid');
-
-    res.json({
-      user: updatedUser,
-      imageUrl: result.secure_url,
-      message: 'Profile image updated successfully'
-    });
-  } catch (error) {
-    console.error('Upload profile image error:', error);
-    res.status(500).json({ error: 'Failed to upload image' });
-  }
-});
 
 // Get user's classes (both as student and teacher)
 router.get('/classes', authenticateToken, requireApproval, async (req, res) => {
