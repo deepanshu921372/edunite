@@ -24,12 +24,7 @@ const AppRoutes = () => {
 
   // Redirect authenticated users to their appropriate dashboard
   const getDashboardRoute = () => {
-    if (!currentUser || !userProfile) return '/';
-
-    // Check if user is approved (backend uses isApproved boolean field)
-    if (!userProfile.isApproved) {
-      return '/approval-pending';
-    }
+    if (!userProfile) return '/';
 
     switch (userProfile.role) {
       case 'admin':
@@ -49,9 +44,13 @@ const AppRoutes = () => {
       <Route
         path="/"
         element={
-          currentUser && userProfile ?
-          <Navigate to={getDashboardRoute()} replace /> :
-          <LandingPage />
+          userProfile && userProfile.isApproved ? (
+            <Navigate to={getDashboardRoute()} replace />
+          ) : userProfile && !userProfile.isApproved ? (
+            <Navigate to="/approval-pending" replace />
+          ) : (
+            <LandingPage />
+          )
         }
       />
 

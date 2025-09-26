@@ -3,6 +3,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth, signInWithGoogle, signOutUser } from '../services/firebase';
 import { authAPI } from '../services/api';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 const AuthContext = createContext();
 
@@ -21,7 +22,7 @@ export const AuthProvider = ({ children }) => {
   const [pendingToastShown, setPendingToastShown] = useState(false);
   const [initializing, setInitializing] = useState(true);
   const [authProcessingRef] = useState({ current: false });
-
+  const navigate = useNavigate();
   // Load user profile from localStorage on initialization
   useEffect(() => {
     const storedUserProfile = localStorage.getItem('userProfile');
@@ -193,6 +194,18 @@ export const AuthProvider = ({ children }) => {
       }
 
       toast.success(`Welcome, ${result.user.displayName}!`);
+      if(response.user.role === 'admin') {
+        navigate('/admin');
+        window.location.reload();
+      }
+      else if(response.user.role === 'teacher') {
+        navigate('/teacher');
+        window.location.reload();
+      }
+      else if(response.user.role === 'student') {
+        navigate('/student');
+        window.location.reload();
+      }
       return response.user;
     } catch (error) {
       console.error('Error signing in:', error);
