@@ -12,6 +12,7 @@ import {
   Filter,
   Plus,
   X,
+  Calendar,
   BookOpen,
 } from "lucide-react";
 import { teacherAPI, commonAPI } from "../../services/api";
@@ -288,9 +289,9 @@ const MaterialsManagement = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Study Materials</h2>
+          <h2 className="text-3xl font-bold text-gray-900">Study Materials</h2>
           <p className="mt-2 text-gray-600">
             Upload and manage study materials for your classes.
           </p>
@@ -298,35 +299,39 @@ const MaterialsManagement = () => {
         <button
           onClick={handleOpenModal}
           type="button"
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+          className="inline-flex cursor-pointer items-center px-6 py-3 border border-transparent text-sm font-medium rounded-xl shadow-lg text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 transform hover:scale-105"
         >
-          <Upload className="w-4 h-4 mr-2" />
+          <Upload className="w-5 h-5 mr-2" />
           Upload Materials
         </button>
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-        <div className="flex flex-col lg:flex-row gap-4">
+      <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+        <div className="flex flex-col xl:flex-row gap-6">
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type="text"
                 placeholder="Search materials by title, description, or subject..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors duration-200 text-sm"
               />
             </div>
           </div>
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <Filter className="text-gray-400 w-5 h-5" />
+          {/* Responsive filter controls */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto">
+            {/* On mobile, stack filter icon and select vertically, align left */}
+            <div className="flex flex-row sm:flex-row items-center sm:items-center space-x-3 w-full sm:w-auto">
+              <span className="items-center hidden sm:flex">
+                <Filter className="text-gray-500 w-5 h-5 flex-shrink-0" />
+              </span>
               <select
                 value={filterClass}
                 onChange={(e) => setFilterClass(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="border cursor-pointer border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors duration-200 text-sm min-w-[140px] w-full sm:w-auto"
               >
                 <option value="all">All Classes</option>
                 {(classes || []).map((cls, index) => (
@@ -339,7 +344,7 @@ const MaterialsManagement = () => {
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="border cursor-pointer border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors duration-200 text-sm min-w-[140px] w-full sm:w-auto"
             >
               <option value="all">All Types</option>
               <option value="pdf">PDF</option>
@@ -352,133 +357,225 @@ const MaterialsManagement = () => {
         </div>
       </div>
 
-      {/* Materials Grid */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-      >
-        {!Array.isArray(filteredMaterials) || filteredMaterials.length === 0 ? (
-          <div className="col-span-full text-center py-12">
-            <BookOpen className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">
-              No materials found
-            </h3>
-            <p className="mt-1 text-sm text-gray-500">
+      {/* Materials Table */}
+      {!Array.isArray(filteredMaterials) || filteredMaterials.length === 0 ? (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden"
+        >
+          <div className="px-8 py-16 text-center">
+            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mb-6">
+              <BookOpen className="w-8 h-8 text-blue-600" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-3">
               {searchTerm || filterClass !== "all" || filterType !== "all"
-                ? "Try adjusting your search or filter criteria."
-                : "Get started by uploading your first study material."}
+                ? "No materials match your criteria"
+                : "No materials yet"}
+            </h3>
+            <p className="text-gray-600 mb-6 max-w-md mx-auto">
+              {searchTerm || filterClass !== "all" || filterType !== "all"
+                ? "Try adjusting your search or filter criteria to find the materials you're looking for."
+                : "Get started by uploading your first study material to share with your students."}
             </p>
-          </div>
-        ) : (
-          (Array.isArray(filteredMaterials) ? filteredMaterials : []).map(
-            (material, index) => (
-              <motion.div
-                key={material._id || material.id || index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="bg-white rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-300"
+            {!(searchTerm || filterClass !== "all" || filterType !== "all") && (
+              <button
+                onClick={handleOpenModal}
+                className="inline-flex cursor-pointer items-center px-6 py-3 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
               >
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-medium text-gray-900 mb-1">
-                        {material.title}
-                      </h3>
-                      <p className="text-sm text-gray-600 mb-2">
-                        {material.description}
-                      </p>
-                      <div className="flex items-center text-xs text-gray-500">
-                        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full mr-2">
-                          {material.grade ||
-                           classes.find((c) => c.id === material.classId)?.name ||
-                           material.class?.name ||
-                           "Unknown Class"}
-                        </span>
-                        <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full">
-                          {material.subject}
-                        </span>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleDelete(material._id || material.id, material.title)}
-                      disabled={processingId === (material._id || material.id)}
-                      className="text-gray-400 hover:text-red-600 disabled:opacity-50"
+                <Upload className="w-4 h-4 mr-2" />
+                Upload Your First Material
+              </button>
+            )}
+          </div>
+        </motion.div>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden"
+        >
+          <div className="px-8 py-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900">Study Materials</h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  {filteredMaterials.length} material{filteredMaterials.length !== 1 ? 's' : ''} found
+                </p>
+              </div>
+              <div className="flex gap-4 items-center justify-center bg-blue-50/50 rounded-lg px-4 py-2 min-w-[90px]">
+                <BookOpen className="w-8 h-8 text-blue-600 mb-1" />
+                <span className="text-xl font-semibold text-gray-900 leading-tight">{filteredMaterials.length} Total</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-100">
+              <thead className="bg-gray-50/50">
+                <tr>
+                  <th className="px-8 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Material Details
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Class & Subject
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Files
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Upload Date
+                  </th>
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-50">
+                {(Array.isArray(filteredMaterials) ? filteredMaterials : []).map(
+                  (material, index) => (
+                    <motion.tr
+                      key={material._id || material.id || index}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.4, delay: index * 0.1 }}
+                      className="hover:bg-blue-50/30 transition-colors duration-200 group"
                     >
-                      {processingId === (material._id || material.id) ? (
-                        <LoadingSpinner size="sm" message="" />
-                      ) : (
-                        <Trash2 className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
-
-                  {/* Files List */}
-                  <div className="space-y-2">
-                    {(material.files || []).map((file, fileIndex) => (
-                      <div
-                        key={fileIndex}
-                        className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
-                      >
-                        <div className="flex items-center flex-1 min-w-0">
-                          {getFileIcon(file.name || file.fileName)}
-                          <div className="ml-3 flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 truncate">
-                              {file.name || file.fileName}
+                      <td className="px-8 py-6">
+                        <div className="flex items-start space-x-3">
+                          <div className="flex-shrink-0 hidden sm:block">
+                            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                              <FileText className="w-5 h-5 text-white" />
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-semibold text-gray-900 mb-1 group-hover:text-blue-700 transition-colors">
+                              {material.title}
+                            </div>
+                            <div className="text-sm text-gray-600 line-clamp-2">
+                              {material.description || 'No description provided'}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-6">
+                        <div className="flex flex-col space-y-2">
+                          <span className="inline-flex items-center px-3 py-1 text-xs font-medium rounded-full bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border border-blue-200">
+                            {material.grade ||
+                             classes.find((c) => c.id === material.classId)?.name ||
+                             material.class?.name ||
+                             "Unknown Class"}
+                          </span>
+                          <span className="inline-flex items-center px-3 py-1 text-xs font-medium rounded-full bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 border border-gray-200">
+                            {material.subject || 'No subject'}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-6">
+                        <div className="space-y-2 max-w-sm">
+                          {(material.files || []).map((file, fileIndex) => (
+                            <div
+                              key={fileIndex}
+                              className="flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200 hover:shadow-sm transition-all duration-200"
+                            >
+                              <div className="flex items-center flex-1 min-w-0">
+                                <div className="flex-shrink-0">
+                                  {getFileIcon(file.name || file.fileName)}
+                                </div>
+                                <div className="ml-3 flex-1 min-w-0">
+                                  <p className="text-xs font-medium text-gray-900 truncate">
+                                    {file.name || file.fileName}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {formatFileSize(file.size || file.fileSize)}
+                                  </p>
+                                </div>
+                              </div>
+                              <a
+                                href={file.url || file.fileUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="ml-3 p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors duration-200"
+                                title="Download file"
+                              >
+                                <Download className="w-4 h-4" />
+                              </a>
+                            </div>
+                          ))}
+                          {/* Handle single file legacy format */}
+                          {!material.files && material.fileUrl && (
+                            <div className="flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200 hover:shadow-sm transition-all duration-200">
+                              <div className="flex items-center flex-1 min-w-0">
+                                <div className="flex-shrink-0">
+                                  {getFileIcon(material.fileName)}
+                                </div>
+                                <div className="ml-3 flex-1 min-w-0">
+                                  <p className="text-xs font-medium text-gray-900 truncate">
+                                    {material.fileName}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {formatFileSize(material.fileSize)}
+                                  </p>
+                                </div>
+                              </div>
+                              <a
+                                href={material.fileUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="ml-3 p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors duration-200"
+                                title="Download file"
+                              >
+                                <Download className="w-4 h-4" />
+                              </a>
+                            </div>
+                          )}
+                          {(!material.files || material.files.length === 0) && !material.fileUrl && (
+                            <div className="flex items-center justify-center p-3 bg-gray-50 rounded-lg border border-gray-200">
+                              <span className="text-xs text-gray-500 italic">No files available</span>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-6 whitespace-nowrap">
+                        <div className="flex items-center space-x-2">
+                          <Calendar className="w-4 h-4 text-gray-400" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">
+                              {new Date(material.uploadedAt).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric'
+                              })}
                             </p>
                             <p className="text-xs text-gray-500">
-                              {formatFileSize(file.size || file.fileSize)}
+                              {new Date(material.uploadedAt).toLocaleDateString('en-US', { weekday: 'short' })}
                             </p>
                           </div>
                         </div>
-                        <a
-                          href={file.url || file.fileUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="ml-2 p-1 text-blue-600 hover:text-blue-800"
+                      </td>
+                      <td className="px-6 py-6 whitespace-nowrap text-center">
+                        <button
+                          onClick={() => handleDelete(material._id || material.id, material.title)}
+                          disabled={processingId === (material._id || material.id)}
+                          className="inline-flex cursor-pointer items-center justify-center p-2 text-red-600 hover:text-red-800 hover:bg-red-50 disabled:opacity-50 rounded-lg transition-all duration-200 group"
+                          title="Delete material"
                         >
-                          <Download className="w-4 h-4" />
-                        </a>
-                      </div>
-                    ))}
-                    {/* Handle single file legacy format */}
-                    {!material.files && material.fileUrl && (
-                      <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                        <div className="flex items-center flex-1 min-w-0">
-                          {getFileIcon(material.fileName)}
-                          <div className="ml-3 flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 truncate">
-                              {material.fileName}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {formatFileSize(material.fileSize)}
-                            </p>
-                          </div>
-                        </div>
-                        <a
-                          href={material.fileUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="ml-2 p-1 text-blue-600 hover:text-blue-800"
-                        >
-                          <Download className="w-4 h-4" />
-                        </a>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="mt-4 pt-4 border-t border-gray-200 text-xs text-gray-500">
-                    Uploaded on{" "}
-                    {new Date(material.uploadedAt).toLocaleDateString()}
-                  </div>
-                </div>
-              </motion.div>
-            )
-          )
-        )}
-      </motion.div>
+                          {processingId === (material._id || material.id) ? (
+                            <LoadingSpinner size="sm" message="" />
+                          ) : (
+                            <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                          )}
+                        </button>
+                      </td>
+                    </motion.tr>
+                  )
+                )}
+              </tbody>
+            </table>
+          </div>
+        </motion.div>
+      )}
 
       {/* Upload Modal */}
       <AnimatePresence>
@@ -517,7 +614,7 @@ const MaterialsManagement = () => {
                 {/* Close button */}
                 <button
                   onClick={handleCloseModal}
-                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10"
+                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10 cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -690,7 +787,7 @@ const MaterialsManagement = () => {
                     <button
                       type="submit"
                       disabled={uploading || uploadForm.files.length === 0}
-                      className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
+                      className="w-full cursor-pointer inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
                     >
                       {uploading ? (
                         <>
