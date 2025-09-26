@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Upload,
   FileText,
@@ -46,6 +46,25 @@ const MaterialsManagement = () => {
   useEffect(() => {
     filterMaterials();
   }, [materials, searchTerm, filterClass, filterType]);
+
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleEscKey = (event) => {
+      if (event.key === "Escape" && showUploadModal) {
+        handleCloseModal();
+      }
+    };
+
+    if (showUploadModal) {
+      document.addEventListener("keydown", handleEscKey);
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.removeEventListener("keydown", handleEscKey);
+        document.body.style.overflow = 'unset';
+      };
+    }
+  }, [showUploadModal]);
 
   const fetchData = async () => {
     try {
@@ -146,6 +165,21 @@ const MaterialsManagement = () => {
     }));
   };
 
+  const handleCloseModal = useCallback(() => {
+    setShowUploadModal(false);
+    setUploadForm({
+      title: '',
+      description: '',
+      classId: '',
+      subject: '',
+      files: []
+    });
+  }, []);
+
+  const handleOpenModal = useCallback(() => {
+    setShowUploadModal(true);
+  }, []);
+
   const handleUpload = async (e) => {
     e.preventDefault();
 
@@ -180,15 +214,7 @@ const MaterialsManagement = () => {
       await teacherAPI.uploadMaterial(materialData);
       toast.success('Materials uploaded successfully');
 
-      // Reset form and close modal
-      setUploadForm({
-        title: '',
-        description: '',
-        classId: '',
-        subject: '',
-        files: []
-      });
-      setShowUploadModal(false);
+      handleCloseModal();
       fetchData();
 
     } catch (error) {
@@ -231,8 +257,9 @@ const MaterialsManagement = () => {
           </p>
         </div>
         <button
-          onClick={() => setShowUploadModal(true)}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          onClick={handleOpenModal}
+          type="button"
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
         >
           <Upload className="w-4 h-4 mr-2" />
           Upload Materials
@@ -383,187 +410,209 @@ const MaterialsManagement = () => {
       </motion.div>
 
       {/* Upload Modal */}
-      {showUploadModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setShowUploadModal(false)} />
+      <AnimatePresence>
+        {showUploadModal && (
+          <motion.div 
+            className="fixed inset-0 z-50 overflow-y-auto"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+              {/* Backdrop */}
+              <motion.div 
+                className="fixed inset-0 bg-gray-500 bg-opacity-75"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={handleCloseModal}
+              />
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full"
-            >
-              <form onSubmit={handleUpload}>
-                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg leading-6 font-medium text-gray-900">
-                      Upload Study Materials
-                    </h3>
-                    <button
-                      type="button"
-                      onClick={() => setShowUploadModal(false)}
-                      className="text-gray-400 hover:text-gray-600"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
+              {/* Center modal */}
+              <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">
+                &#8203;
+              </span>
 
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Title *
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={uploadForm.title}
-                          onChange={(e) => setUploadForm({ ...uploadForm, title: e.target.value })}
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder="e.g., Chapter 5 - Quantum Physics"
-                        />
-                      </div>
+              <motion.div
+                className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full relative"
+                initial={{ opacity: 0, scale: 0.95, y: 50 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 50 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Close button */}
+                <button
+                  onClick={handleCloseModal}
+                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10"
+                >
+                  <X className="w-5 h-5" />
+                </button>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Subject
-                        </label>
-                        <input
-                          type="text"
-                          value={uploadForm.subject}
-                          onChange={(e) => setUploadForm({ ...uploadForm, subject: e.target.value })}
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder="e.g., Physics, Mathematics"
-                        />
-                      </div>
+                <form onSubmit={handleUpload}>
+                  <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div className="flex items-center justify-between mb-4 pr-8">
+                      <h3 className="text-lg leading-6 font-medium text-gray-900">
+                        Upload Study Materials
+                      </h3>
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Class *
-                      </label>
-                      <select
-                        required
-                        value={uploadForm.classId}
-                        onChange={(e) => setUploadForm({ ...uploadForm, classId: e.target.value })}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      >
-                        <option value="">Select a class</option>
-                        {classes.map(cls => (
-                          <option key={cls.id} value={cls.id}>
-                            {cls.name} ({cls.subject})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Title *
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={uploadForm.title}
+                            onChange={(e) => setUploadForm({ ...uploadForm, title: e.target.value })}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="e.g., Chapter 5 - Quantum Physics"
+                          />
+                        </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Description
-                      </label>
-                      <textarea
-                        value={uploadForm.description}
-                        onChange={(e) => setUploadForm({ ...uploadForm, description: e.target.value })}
-                        rows={3}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Brief description of the material..."
-                      />
-                    </div>
-
-                    {/* File Upload */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Files *
-                      </label>
-                      <div
-                        onClick={() => fileInputRef.current?.click()}
-                        className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-400 transition-colors duration-200"
-                      >
-                        <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                        <p className="mt-2 text-sm text-gray-600">
-                          Click to upload files or drag and drop
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          PDF, Images, Videos, Documents (Max 10MB each)
-                        </p>
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          multiple
-                          onChange={handleFileSelect}
-                          className="hidden"
-                          accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.mp4,.avi,.mov"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Selected Files */}
-                    {uploadForm.files.length > 0 && (
-                      <div>
-                        <h4 className="text-sm font-medium text-gray-700 mb-2">
-                          Selected Files ({uploadForm.files.length})
-                        </h4>
-                        <div className="space-y-2 max-h-40 overflow-y-auto">
-                          {uploadForm.files.map((file, index) => (
-                            <div
-                              key={index}
-                              className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
-                            >
-                              <div className="flex items-center flex-1 min-w-0">
-                                {getFileIcon(file.name)}
-                                <div className="ml-3 flex-1 min-w-0">
-                                  <p className="text-sm font-medium text-gray-900 truncate">
-                                    {file.name}
-                                  </p>
-                                  <p className="text-xs text-gray-500">
-                                    {formatFileSize(file.size)}
-                                  </p>
-                                </div>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveFile(index)}
-                                className="ml-2 p-1 text-red-600 hover:text-red-800"
-                              >
-                                <X className="w-4 h-4" />
-                              </button>
-                            </div>
-                          ))}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Subject
+                          </label>
+                          <input
+                            type="text"
+                            value={uploadForm.subject}
+                            onChange={(e) => setUploadForm({ ...uploadForm, subject: e.target.value })}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="e.g., Physics, Mathematics"
+                          />
                         </div>
                       </div>
-                    )}
-                  </div>
-                </div>
 
-                <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                  <button
-                    type="submit"
-                    disabled={uploading || uploadForm.files.length === 0}
-                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
-                  >
-                    {uploading ? (
-                      <>
-                        <LoadingSpinner size="sm" message="" />
-                        <span className="ml-2">Uploading...</span>
-                      </>
-                    ) : (
-                      'Upload Materials'
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowUploadModal(false)}
-                    disabled={uploading}
-                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-        </div>
-      )}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Class *
+                        </label>
+                        <select
+                          required
+                          value={uploadForm.classId}
+                          onChange={(e) => setUploadForm({ ...uploadForm, classId: e.target.value })}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                          <option value="">Select a class</option>
+                          {classes.map(cls => (
+                            <option key={cls.id} value={cls.id}>
+                              {cls.name} ({cls.subject})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Description
+                        </label>
+                        <textarea
+                          value={uploadForm.description}
+                          onChange={(e) => setUploadForm({ ...uploadForm, description: e.target.value })}
+                          rows={3}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="Brief description of the material..."
+                        />
+                      </div>
+
+                      {/* File Upload */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Files *
+                        </label>
+                        <div
+                          onClick={() => fileInputRef.current?.click()}
+                          className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-400 transition-colors duration-200"
+                        >
+                          <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                          <p className="mt-2 text-sm text-gray-600">
+                            Click to upload files or drag and drop
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            PDF, Images, Videos, Documents (Max 10MB each)
+                          </p>
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            multiple
+                            onChange={handleFileSelect}
+                            className="hidden"
+                            accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.mp4,.avi,.mov"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Selected Files */}
+                      {uploadForm.files.length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-700 mb-2">
+                            Selected Files ({uploadForm.files.length})
+                          </h4>
+                          <div className="space-y-2 max-h-40 overflow-y-auto">
+                            {uploadForm.files.map((file, index) => (
+                              <div
+                                key={index}
+                                className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
+                              >
+                                <div className="flex items-center flex-1 min-w-0">
+                                  {getFileIcon(file.name)}
+                                  <div className="ml-3 flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-gray-900 truncate">
+                                      {file.name}
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      {formatFileSize(file.size)}
+                                    </p>
+                                  </div>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveFile(index)}
+                                  className="ml-2 p-1 text-red-600 hover:text-red-800"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button
+                      type="submit"
+                      disabled={uploading || uploadForm.files.length === 0}
+                      className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
+                    >
+                      {uploading ? (
+                        <>
+                          <LoadingSpinner size="sm" message="" />
+                          <span className="ml-2">Uploading...</span>
+                        </>
+                      ) : (
+                        'Upload Materials'
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCloseModal}
+                      disabled={uploading}
+                      className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
