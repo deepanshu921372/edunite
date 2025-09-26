@@ -268,7 +268,10 @@ const TimetableManagement = () => {
   };
 
   const getClassesForDate = (date) => {
-    const dayName = daysOfWeek[date.getDay()];
+    // JavaScript getDay(): 0=Sunday, 1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday
+    const jsDay = date.getDay();
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayName = dayNames[jsDay];
     return getClassesForDay(dayName);
   };
 
@@ -311,7 +314,11 @@ const TimetableManagement = () => {
     timetable.forEach(timetableEntry => {
       if (timetableEntry.schedule) {
         timetableEntry.schedule.forEach(scheduleItem => {
-          if (scheduleItem.day === dayName) {
+          // Normalize day names for comparison (handle case sensitivity)
+          const scheduleDay = scheduleItem.day?.trim();
+          const requestedDay = dayName?.trim();
+
+          if (scheduleDay && requestedDay && scheduleDay.toLowerCase() === requestedDay.toLowerCase()) {
             scheduleItem.timeSlots.forEach(timeSlot => {
               dayClasses.push({
                 id: `${timetableEntry._id}-${scheduleItem.day}-${timeSlot.startTime}`,
@@ -503,7 +510,8 @@ const TimetableManagement = () => {
                     <div className="space-y-1">
                       {classesForDate.slice(0, 3).map((classEntry, classIndex) => {
                         const classInfo = classes.find((c) => c._id === classEntry.class || c.id === classEntry.class);
-                        const classOver = isClassOver(daysOfWeek[date.getDay()], classEntry.endTime, date);
+                        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                        const classOver = isClassOver(dayNames[date.getDay()], classEntry.endTime, date);
 
                         return (
                           <motion.div
