@@ -130,19 +130,19 @@ const TeacherProfile = () => {
     try {
       const backendData = {
         name: profileData.displayName,
-        qualifications: profileData.qualifications,
-        experience: profileData.experience,
-        specialization: profileData.specialization,
-        teachingGrades: profileData.teachingGrades,
-        teachingSubjects: profileData.teachingSubjects,
-        emergencyContactName: profileData.emergencyContactName,
-        emergencyContactPhone: profileData.emergencyContactPhone,
-        emergencyContactRelation: profileData.emergencyContactRelation,
         profile: {
           phoneNumber: profileData.phoneNumber,
           address: profileData.address,
           dateOfBirth: profileData.dateOfBirth ? new Date(profileData.dateOfBirth) : null,
-          joinedDate: profileData.joinedDate ? new Date(profileData.joinedDate) : null
+          joinedDate: profileData.joinedDate ? new Date(profileData.joinedDate) : null,
+          qualifications: profileData.qualifications,
+          experience: profileData.experience,
+          specialization: profileData.specialization,
+          teachingGrades: profileData.teachingGrades,
+          teachingSubjects: profileData.teachingSubjects,
+          emergencyContactName: profileData.emergencyContactName,
+          emergencyContactPhone: profileData.emergencyContactPhone,
+          emergencyContactRelation: profileData.emergencyContactRelation
         }
       };
 
