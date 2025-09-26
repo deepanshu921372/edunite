@@ -74,7 +74,8 @@ const TeacherProfile = () => {
     const fetchProfileData = async () => {
       try {
         if (currentUser) {
-          const freshProfile = await teacherAPI.getProfile();
+          const response = await teacherAPI.getProfile();
+          const freshProfile = response?.data || response;
 
           setProfileData({
             displayName: freshProfile.name || currentUser.displayName || '',
@@ -85,8 +86,8 @@ const TeacherProfile = () => {
             qualifications: freshProfile.profile?.qualifications || '',
             experience: freshProfile.profile?.experience || '',
             specialization: freshProfile.profile?.specialization || '',
-            teachingGrades: freshProfile.profile?.teachingGrades || [],
-            teachingSubjects: freshProfile.profile?.teachingSubjects || [],
+            teachingGrades: Array.isArray(freshProfile.profile?.teachingGrades) ? freshProfile.profile.teachingGrades : [],
+            teachingSubjects: Array.isArray(freshProfile.profile?.teachingSubjects) ? freshProfile.profile.teachingSubjects : [],
             joinedDate: freshProfile.profile?.joinedDate ? new Date(freshProfile.profile.joinedDate).toISOString().split('T')[0] : '',
             emergencyContactName: freshProfile.profile?.emergencyContactName || '',
             emergencyContactPhone: freshProfile.profile?.emergencyContactPhone || '',
@@ -129,24 +130,25 @@ const TeacherProfile = () => {
     try {
       const backendData = {
         name: profileData.displayName,
+        qualifications: profileData.qualifications,
+        experience: profileData.experience,
+        specialization: profileData.specialization,
+        teachingGrades: profileData.teachingGrades,
+        teachingSubjects: profileData.teachingSubjects,
+        emergencyContactName: profileData.emergencyContactName,
+        emergencyContactPhone: profileData.emergencyContactPhone,
+        emergencyContactRelation: profileData.emergencyContactRelation,
         profile: {
           phoneNumber: profileData.phoneNumber,
           address: profileData.address,
           dateOfBirth: profileData.dateOfBirth ? new Date(profileData.dateOfBirth) : null,
-          qualifications: profileData.qualifications,
-          experience: profileData.experience,
-          specialization: profileData.specialization,
-          teachingGrades: profileData.teachingGrades,
-          teachingSubjects: profileData.teachingSubjects,
-          joinedDate: profileData.joinedDate ? new Date(profileData.joinedDate) : null,
-          emergencyContactName: profileData.emergencyContactName,
-          emergencyContactPhone: profileData.emergencyContactPhone,
-          emergencyContactRelation: profileData.emergencyContactRelation
+          joinedDate: profileData.joinedDate ? new Date(profileData.joinedDate) : null
         }
       };
 
       await teacherAPI.updateProfile(backendData);
-      const freshProfile = await teacherAPI.getProfile();
+      const response = await teacherAPI.getProfile();
+      const freshProfile = response.data;
 
       localStorage.setItem('userProfile', JSON.stringify(freshProfile));
 
