@@ -92,7 +92,7 @@ const AdminOverview = () => {
       <div>
         <h2 className="text-2xl font-bold text-gray-900">Dashboard Overview</h2>
         <p className="mt-2 text-gray-600">
-          Here's what's happening with your tuition management system.
+          Here's what's happening with your tuition center management.
         </p>
       </div>
 

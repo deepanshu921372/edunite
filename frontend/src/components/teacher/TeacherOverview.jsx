@@ -100,7 +100,7 @@ const TeacherOverview = () => {
       <div>
         <h2 className="text-2xl font-bold text-gray-900">Teacher Dashboard</h2>
         <p className="mt-2 text-gray-600">
-          Welcome back! Here's an overview of your classes and student progress.
+          Welcome back! Here's an overview of your tuition classes and student progress.
         </p>
       </div>
 

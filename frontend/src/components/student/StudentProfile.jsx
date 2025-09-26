@@ -11,7 +11,8 @@ import {
   X,
   Camera,
   School,
-  BookOpen
+  BookOpen,
+  Users
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { studentAPI } from '../../services/api';
@@ -28,13 +29,14 @@ const StudentProfile = () => {
     phoneNumber: '',
     address: '',
     dateOfBirth: '',
-    class: '',
+    grade: '',
+    stream: '',
     schoolName: '',
+    parentName: '',
     parentPhoneNumber: '',
-    rollNumber: '',
-    course: '',
-    year: '',
-    semester: '',
+    admissionNumber: '',
+    subjects: [],
+    previousTuitionExperience: '',
     emergencyContact: {
       name: '',
       phone: '',
@@ -42,6 +44,26 @@ const StudentProfile = () => {
     }
   });
 
+  // Grade options for tuition students
+  const gradeOptions = [
+    'Nursery', 'LKG', 'UKG',
+    '1st', '2nd', '3rd', '4th', '5th',
+    '6th', '7th', '8th', '9th', '10th',
+    '11th', '12th'
+  ];
+
+  // Stream options for 11th and 12th grade
+  const streamOptions = [
+    'Science', 'Commerce', 'Arts'
+  ];
+
+  // Common subjects for tuition
+  const subjectOptions = [
+    'Mathematics', 'English', 'Hindi', 'Science',
+    'Social Studies', 'Physics', 'Chemistry', 'Biology',
+    'Accountancy', 'Business Studies', 'Economics',
+    'Computer Science', 'History', 'Geography', 'Political Science'
+  ];
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -58,13 +80,14 @@ const StudentProfile = () => {
             phoneNumber: freshProfile.profile?.phoneNumber || freshProfile.phoneNumber || '',
             address: freshProfile.profile?.address || freshProfile.address || '',
             dateOfBirth: freshProfile.profile?.dateOfBirth ? new Date(freshProfile.profile.dateOfBirth).toISOString().split('T')[0] : (freshProfile.dateOfBirth ? new Date(freshProfile.dateOfBirth).toISOString().split('T')[0] : ''),
-            class: freshProfile.profile?.class || freshProfile.class || '',
+            grade: freshProfile.profile?.grade || '',
+            stream: freshProfile.profile?.stream || '',
             schoolName: freshProfile.profile?.schoolName || freshProfile.schoolName || '',
+            parentName: freshProfile.profile?.parentName || '',
             parentPhoneNumber: freshProfile.profile?.parentPhoneNumber || freshProfile.parentPhoneNumber || '',
-            rollNumber: freshProfile.rollNumber || '',
-            course: freshProfile.course || '',
-            year: freshProfile.year || '',
-            semester: freshProfile.semester || '',
+            admissionNumber: freshProfile.admissionNumber || '',
+            subjects: freshProfile.subjects || [],
+            previousTuitionExperience: freshProfile.profile?.previousTuitionExperience || '',
             emergencyContact: {
               name: freshProfile.emergencyContact?.name || '',
               phone: freshProfile.emergencyContact?.phone || '',
@@ -85,13 +108,14 @@ const StudentProfile = () => {
             phoneNumber: userProfile.profile?.phoneNumber || userProfile.phoneNumber || '',
             address: userProfile.profile?.address || userProfile.address || '',
             dateOfBirth: userProfile.profile?.dateOfBirth ? new Date(userProfile.profile.dateOfBirth).toISOString().split('T')[0] : (userProfile.dateOfBirth ? new Date(userProfile.dateOfBirth).toISOString().split('T')[0] : ''),
-            class: userProfile.profile?.class || userProfile.class || '',
+            grade: userProfile.profile?.grade || '',
+            stream: userProfile.profile?.stream || '',
             schoolName: userProfile.profile?.schoolName || userProfile.schoolName || '',
+            parentName: userProfile.profile?.parentName || '',
             parentPhoneNumber: userProfile.profile?.parentPhoneNumber || userProfile.parentPhoneNumber || '',
-            rollNumber: userProfile.rollNumber || '',
-            course: userProfile.course || '',
-            year: userProfile.year || '',
-            semester: userProfile.semester || '',
+            admissionNumber: userProfile.admissionNumber || '',
+            subjects: userProfile.subjects || [],
+            previousTuitionExperience: userProfile.profile?.previousTuitionExperience || '',
             emergencyContact: {
               name: userProfile.emergencyContact?.name || '',
               phone: userProfile.emergencyContact?.phone || '',
@@ -103,7 +127,7 @@ const StudentProfile = () => {
     };
 
     fetchProfileData();
-  }, [currentUser?.uid, userProfile]); 
+  }, [currentUser?.uid, userProfile]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -116,14 +140,15 @@ const StudentProfile = () => {
           phoneNumber: profileData.phoneNumber,
           address: profileData.address,
           dateOfBirth: profileData.dateOfBirth ? new Date(profileData.dateOfBirth) : null,
+          grade: profileData.grade,
+          stream: profileData.stream,
+          schoolName: profileData.schoolName,
+          parentName: profileData.parentName,
           parentPhoneNumber: profileData.parentPhoneNumber,
-          class: profileData.class,
-          schoolName: profileData.schoolName
+          previousTuitionExperience: profileData.previousTuitionExperience
         },
-        rollNumber: profileData.rollNumber,
-        course: profileData.course,
-        year: profileData.year,
-        semester: profileData.semester,
+        admissionNumber: profileData.admissionNumber,
+        subjects: profileData.subjects,
         emergencyContact: profileData.emergencyContact
       };
 
@@ -145,13 +170,14 @@ const StudentProfile = () => {
         phoneNumber: freshProfile.profile?.phoneNumber || freshProfile.phoneNumber || '',
         address: freshProfile.profile?.address || freshProfile.address || '',
         dateOfBirth: freshProfile.profile?.dateOfBirth ? new Date(freshProfile.profile.dateOfBirth).toISOString().split('T')[0] : (freshProfile.dateOfBirth ? new Date(freshProfile.dateOfBirth).toISOString().split('T')[0] : ''),
-        class: freshProfile.profile?.class || freshProfile.class || '',
+        grade: freshProfile.profile?.grade || '',
+        stream: freshProfile.profile?.stream || '',
         schoolName: freshProfile.profile?.schoolName || freshProfile.schoolName || '',
+        parentName: freshProfile.profile?.parentName || '',
         parentPhoneNumber: freshProfile.profile?.parentPhoneNumber || freshProfile.parentPhoneNumber || '',
-        rollNumber: freshProfile.rollNumber || '',
-        course: freshProfile.course || '',
-        year: freshProfile.year || '',
-        semester: freshProfile.semester || '',
+        admissionNumber: freshProfile.admissionNumber || '',
+        subjects: freshProfile.subjects || [],
+        previousTuitionExperience: freshProfile.profile?.previousTuitionExperience || '',
         emergencyContact: {
           name: freshProfile.emergencyContact?.name || '',
           phone: freshProfile.emergencyContact?.phone || '',
@@ -178,13 +204,14 @@ const StudentProfile = () => {
         phoneNumber: userProfile.profile?.phoneNumber || userProfile.phoneNumber || '',
         address: userProfile.profile?.address || userProfile.address || '',
         dateOfBirth: userProfile.profile?.dateOfBirth ? new Date(userProfile.profile.dateOfBirth).toISOString().split('T')[0] : (userProfile.dateOfBirth ? new Date(userProfile.dateOfBirth).toISOString().split('T')[0] : ''),
-        class: userProfile.profile?.class || userProfile.class || '',
+        grade: userProfile.profile?.grade || '',
+        stream: userProfile.profile?.stream || '',
         schoolName: userProfile.profile?.schoolName || userProfile.schoolName || '',
+        parentName: userProfile.profile?.parentName || '',
         parentPhoneNumber: userProfile.profile?.parentPhoneNumber || userProfile.parentPhoneNumber || '',
-        rollNumber: userProfile.rollNumber || '',
-        course: userProfile.course || '',
-        year: userProfile.year || '',
-        semester: userProfile.semester || '',
+        admissionNumber: userProfile.admissionNumber || '',
+        subjects: userProfile.subjects || [],
+        previousTuitionExperience: userProfile.profile?.previousTuitionExperience || '',
         emergencyContact: {
           name: userProfile.emergencyContact?.name || '',
           phone: userProfile.emergencyContact?.phone || '',
@@ -211,13 +238,21 @@ const StudentProfile = () => {
     setProfileData(updatedData);
   };
 
+  const handleSubjectsChange = (subject) => {
+    const updatedSubjects = profileData.subjects.includes(subject)
+      ? profileData.subjects.filter(s => s !== subject)
+      : [...profileData.subjects, subject];
+
+    setProfileData({ ...profileData, subjects: updatedSubjects });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">My Profile</h2>
           <p className="mt-2 text-gray-600">
-            Manage your personal information and academic details.
+            Manage your personal information and tuition details.
           </p>
         </div>
         {!editing ? (
@@ -285,13 +320,18 @@ const StudentProfile = () => {
                 <div className="flex items-center mt-2">
                   <School className="w-4 h-4 mr-2" />
                   <span className="text-blue-200">
-                    {profileData.course} • Year {profileData.year} • Semester {profileData.semester}
+                    {profileData.grade && profileData.stream
+                      ? `${profileData.grade} Grade • ${profileData.stream} Stream`
+                      : profileData.grade
+                        ? `${profileData.grade} Grade`
+                        : 'Grade not set'
+                    }
                   </span>
                 </div>
-                {profileData.rollNumber && (
+                {profileData.admissionNumber && (
                   <div className="flex items-center mt-1">
                     <BookOpen className="w-4 h-4 mr-2" />
-                    <span className="text-blue-200">Roll Number: {profileData.rollNumber}</span>
+                    <span className="text-blue-200">Admission No: {profileData.admissionNumber}</span>
                   </div>
                 )}
               </div>
@@ -343,7 +383,7 @@ const StudentProfile = () => {
                         value={profileData.phoneNumber}
                         onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="+1 (555) 123-4567"
+                        placeholder="+91 9876543210"
                       />
                     ) : (
                       <div className="flex items-center p-3 bg-gray-50 rounded-lg">
@@ -398,95 +438,177 @@ const StudentProfile = () => {
 
               <div>
                 <h4 className="text-lg font-medium text-gray-900 mb-4">Academic Information</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Roll Number
+                      Admission Number
                     </label>
                     {editing ? (
                       <input
                         type="text"
-                        value={profileData.rollNumber}
-                        onChange={(e) => handleInputChange('rollNumber', e.target.value)}
+                        value={profileData.admissionNumber}
+                        onChange={(e) => handleInputChange('admissionNumber', e.target.value)}
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="e.g., 2024001"
+                        placeholder="e.g., TU2024001"
                       />
                     ) : (
                       <div className="p-3 bg-gray-50 rounded-lg">
-                        <span className="text-gray-900">{profileData.rollNumber || 'Not set'}</span>
+                        <span className="text-gray-900">{profileData.admissionNumber || 'Not set'}</span>
                       </div>
                     )}
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Course
+                      Grade
+                    </label>
+                    {editing ? (
+                      <select
+                        value={profileData.grade}
+                        onChange={(e) => handleInputChange('grade', e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="">Select Grade</option>
+                        {gradeOptions.map(grade => (
+                          <option key={grade} value={grade}>{grade}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <div className="p-3 bg-gray-50 rounded-lg">
+                        <span className="text-gray-900">{profileData.grade || 'Not set'}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Stream {(profileData.grade === '11th' || profileData.grade === '12th') && <span className="text-red-500">*</span>}
+                    </label>
+                    {editing ? (
+                      <select
+                        value={profileData.stream}
+                        onChange={(e) => handleInputChange('stream', e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        disabled={!(profileData.grade === '11th' || profileData.grade === '12th')}
+                      >
+                        <option value="">Select Stream</option>
+                        {streamOptions.map(stream => (
+                          <option key={stream} value={stream}>{stream}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <div className="p-3 bg-gray-50 rounded-lg">
+                        <span className="text-gray-900">{profileData.stream || 'Not applicable'}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      School Name
                     </label>
                     {editing ? (
                       <input
                         type="text"
-                        value={profileData.course}
-                        onChange={(e) => handleInputChange('course', e.target.value)}
+                        value={profileData.schoolName}
+                        onChange={(e) => handleInputChange('schoolName', e.target.value)}
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="e.g., Computer Science"
+                        placeholder="Enter your school name"
                       />
                     ) : (
                       <div className="p-3 bg-gray-50 rounded-lg">
-                        <span className="text-gray-900">{profileData.course || 'Not set'}</span>
+                        <span className="text-gray-900">{profileData.schoolName || 'Not set'}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="md:col-span-3">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Subjects Enrolled
+                    </label>
+                    {editing ? (
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                        {subjectOptions.map(subject => (
+                          <label key={subject} className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={profileData.subjects.includes(subject)}
+                              onChange={() => handleSubjectsChange(subject)}
+                              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            />
+                            <span className="ml-2 text-sm text-gray-700">{subject}</span>
+                          </label>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-3 bg-gray-50 rounded-lg">
+                        <span className="text-gray-900">
+                          {profileData.subjects.length > 0 ? profileData.subjects.join(', ') : 'No subjects selected'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-lg font-medium text-gray-900 mb-4">Parent/Guardian Information</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Parent/Guardian Name
+                    </label>
+                    {editing ? (
+                      <input
+                        type="text"
+                        value={profileData.parentName}
+                        onChange={(e) => handleInputChange('parentName', e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Enter parent/guardian name"
+                      />
+                    ) : (
+                      <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                        <Users className="w-4 h-4 text-gray-400 mr-3" />
+                        <span className="text-gray-900">{profileData.parentName || 'Not set'}</span>
                       </div>
                     )}
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Year
+                      Parent/Guardian Phone
                     </label>
                     {editing ? (
-                      <select
-                        value={profileData.year}
-                        onChange={(e) => handleInputChange('year', e.target.value)}
+                      <input
+                        type="tel"
+                        value={profileData.parentPhoneNumber}
+                        onChange={(e) => handleInputChange('parentPhoneNumber', e.target.value)}
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      >
-                        <option value="">Select Year</option>
-                        <option value="1">1st Year</option>
-                        <option value="2">2nd Year</option>
-                        <option value="3">3rd Year</option>
-                        <option value="4">4th Year</option>
-                      </select>
+                        placeholder="+91 9876543210"
+                      />
                     ) : (
-                      <div className="p-3 bg-gray-50 rounded-lg">
-                        <span className="text-gray-900">
-                          {profileData.year ? `${profileData.year} Year` : 'Not set'}
-                        </span>
+                      <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                        <Phone className="w-4 h-4 text-gray-400 mr-3" />
+                        <span className="text-gray-900">{profileData.parentPhoneNumber || 'Not set'}</span>
                       </div>
                     )}
                   </div>
 
-                  <div>
+                  <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Semester
+                      Previous Tuition Experience
                     </label>
                     {editing ? (
-                      <select
-                        value={profileData.semester}
-                        onChange={(e) => handleInputChange('semester', e.target.value)}
+                      <textarea
+                        rows={2}
+                        value={profileData.previousTuitionExperience}
+                        onChange={(e) => handleInputChange('previousTuitionExperience', e.target.value)}
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      >
-                        <option value="">Select Semester</option>
-                        <option value="1">1st Semester</option>
-                        <option value="2">2nd Semester</option>
-                        <option value="3">3rd Semester</option>
-                        <option value="4">4th Semester</option>
-                        <option value="5">5th Semester</option>
-                        <option value="6">6th Semester</option>
-                        <option value="7">7th Semester</option>
-                        <option value="8">8th Semester</option>
-                      </select>
+                        placeholder="Brief description of previous tuition experience (optional)"
+                      />
                     ) : (
                       <div className="p-3 bg-gray-50 rounded-lg">
-                        <span className="text-gray-900">
-                          {profileData.semester ? `${profileData.semester} Semester` : 'Not set'}
-                        </span>
+                        <span className="text-gray-900">{profileData.previousTuitionExperience || 'Not specified'}</span>
                       </div>
                     )}
                   </div>
@@ -525,7 +647,7 @@ const StudentProfile = () => {
                         value={profileData.emergencyContact.phone}
                         onChange={(e) => handleInputChange('emergencyContact.phone', e.target.value)}
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="+1 (555) 123-4567"
+                        placeholder="+91 9876543210"
                       />
                     ) : (
                       <div className="p-3 bg-gray-50 rounded-lg">
@@ -548,8 +670,8 @@ const StudentProfile = () => {
                         <option value="Parent">Parent</option>
                         <option value="Guardian">Guardian</option>
                         <option value="Sibling">Sibling</option>
-                        <option value="Spouse">Spouse</option>
-                        <option value="Friend">Friend</option>
+                        <option value="Relative">Relative</option>
+                        <option value="Family Friend">Family Friend</option>
                         <option value="Other">Other</option>
                       </select>
                     ) : (

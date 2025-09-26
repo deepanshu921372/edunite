@@ -120,7 +120,7 @@ const StudentOverview = () => {
       <div>
         <h2 className="text-2xl font-bold text-gray-900">Student Dashboard</h2>
         <p className="mt-2 text-gray-600">
-          Welcome back! Here's an overview of your academic progress and activities.
+          Welcome back! Here's an overview of your tuition progress and activities.
         </p>
       </div>
 
@@ -171,7 +171,7 @@ const StudentOverview = () => {
             <BookOpen className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-2 text-sm font-medium text-gray-900">Welcome to your dashboard!</h3>
             <p className="mt-1 text-sm text-gray-500">
-              Once you're enrolled in classes, your academic progress and activities will appear here.
+              Once you're enrolled in classes, your tuition progress and activities will appear here.
             </p>
           </div>
         </motion.div>
