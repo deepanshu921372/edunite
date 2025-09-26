@@ -246,27 +246,27 @@ const StudentProfile = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-4 sm:space-y-6 px-4 sm:px-0">
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">My Profile</h2>
-          <p className="mt-2 text-gray-600">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">My Profile</h2>
+          <p className="mt-2 text-sm sm:text-base text-gray-600">
             Manage your personal information and tuition details.
           </p>
         </div>
         {!editing ? (
           <button
             onClick={() => setEditing(true)}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 border border-transparent text-sm font-medium rounded-xl shadow-lg text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 transform hover:scale-105"
           >
             <Edit3 className="w-4 h-4 mr-2" />
             Edit Profile
           </button>
         ) : (
-          <div className="flex space-x-2">
+          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 w-full sm:w-auto">
             <button
               onClick={handleCancel}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-xl shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
             >
               <X className="w-4 h-4 mr-2" />
               Cancel
@@ -274,7 +274,7 @@ const StudentProfile = () => {
             <button
               onClick={handleSubmit}
               disabled={loading}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+              className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl shadow-lg text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 transition-all duration-200"
             >
               {loading ? (
                 <LoadingSpinner size="sm" message="" />
@@ -293,38 +293,50 @@ const StudentProfile = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="bg-white shadow-md rounded-lg overflow-hidden"
+        className="bg-white shadow-lg rounded-xl overflow-hidden border border-gray-100"
       >
         <form onSubmit={handleSubmit}>
-          <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-8">
-            <div className="text-white">
-              <h3 className="text-2xl font-bold">{profileData.displayName}</h3>
-              <p className="text-blue-100 mt-1">{profileData.email}</p>
-              <div className="flex items-center mt-3">
-                <School className="w-4 h-4 mr-2" />
-                <span className="text-blue-200">
-                  {profileData.grade && profileData.stream
-                    ? `${profileData.grade} Grade • ${profileData.stream} Stream`
-                    : profileData.grade
-                      ? `${profileData.grade} Grade`
-                      : 'Grade not set'
-                  }
-                </span>
-              </div>
-              {profileData.admissionNumber && (
-                <div className="flex items-center mt-2">
-                  <BookOpen className="w-4 h-4 mr-2" />
-                  <span className="text-blue-200">Admission No: {profileData.admissionNumber}</span>
+          <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-4 sm:px-6 py-8 sm:py-10 border border-gray-200 rounded-t-xl">
+            <div className="text-gray-900">
+              <h3 className="text-2xl sm:text-3xl font-bold mb-2 text-gray-800">{profileData.displayName}</h3>
+              <p className="text-gray-600 mb-6">{profileData.email}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                <div className="flex items-center">
+                  <div className="bg-blue-500 p-3 rounded-xl mr-4 flex items-center justify-center shadow-sm">
+                    <School className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase tracking-wide font-medium mb-1">Grade & Stream</p>
+                    <p className="font-semibold text-sm sm:text-lg text-gray-800">
+                      {profileData.grade && profileData.stream
+                        ? `${profileData.grade} • ${profileData.stream}`
+                        : profileData.grade
+                          ? profileData.grade
+                          : 'Not set'
+                      }
+                    </p>
+                  </div>
                 </div>
-              )}
+                <div className="flex items-center">
+                  <div className="bg-green-500 p-3 rounded-xl mr-4 flex items-center justify-center shadow-sm">
+                    <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase tracking-wide font-medium mb-1">Admission Number</p>
+                    <p className="font-semibold text-sm sm:text-lg text-gray-800">
+                      {profileData.admissionNumber || 'Not set'}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="px-6 py-6">
-            <div className="space-y-8">
+          <div className="px-4 sm:px-6 py-6 sm:py-8">
+            <div className="space-y-8 sm:space-y-10">
               <div>
-                <h4 className="text-lg font-medium text-gray-900 mb-4">Personal Information</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <h4 className="text-lg sm:text-xl font-semibold text-gray-900 mb-6 pb-2 border-b border-gray-200">Personal Information</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Full Name *
@@ -335,12 +347,12 @@ const StudentProfile = () => {
                         required
                         value={profileData.displayName}
                         onChange={(e) => handleInputChange('displayName', e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors duration-200 text-sm"
                       />
                     ) : (
-                      <div className="flex items-center p-3 bg-gray-50 rounded-lg">
-                        <User className="w-4 h-4 text-gray-400 mr-3" />
-                        <span className="text-gray-900">{profileData.displayName || 'Not set'}</span>
+                      <div className="flex items-center p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200">
+                        <User className="w-4 h-4 text-gray-400 mr-3 flex-shrink-0" />
+                        <span className="text-gray-900 font-medium">{profileData.displayName || 'Not set'}</span>
                       </div>
                     )}
                   </div>
@@ -349,9 +361,9 @@ const StudentProfile = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Email Address
                     </label>
-                    <div className="flex items-center p-3 bg-gray-50 rounded-lg">
-                      <Mail className="w-4 h-4 text-gray-400 mr-3" />
-                      <span className="text-gray-600">{profileData.email}</span>
+                    <div className="flex items-center p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200">
+                      <Mail className="w-4 h-4 text-gray-400 mr-3 flex-shrink-0" />
+                      <span className="text-gray-600 font-medium">{profileData.email}</span>
                     </div>
                   </div>
 
@@ -364,13 +376,13 @@ const StudentProfile = () => {
                         type="tel"
                         value={profileData.phoneNumber}
                         onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors duration-200 text-sm"
                         placeholder="+91 9876543210"
                       />
                     ) : (
-                      <div className="flex items-center p-3 bg-gray-50 rounded-lg">
-                        <Phone className="w-4 h-4 text-gray-400 mr-3" />
-                        <span className="text-gray-900">{profileData.phoneNumber || 'Not set'}</span>
+                      <div className="flex items-center p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200">
+                        <Phone className="w-4 h-4 text-gray-400 mr-3 flex-shrink-0" />
+                        <span className="text-gray-900 font-medium">{profileData.phoneNumber || 'Not set'}</span>
                       </div>
                     )}
                   </div>
@@ -384,12 +396,12 @@ const StudentProfile = () => {
                         type="date"
                         value={profileData.dateOfBirth}
                         onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors duration-200 text-sm"
                       />
                     ) : (
-                      <div className="flex items-center p-3 bg-gray-50 rounded-lg">
-                        <Calendar className="w-4 h-4 text-gray-400 mr-3" />
-                        <span className="text-gray-900">
+                      <div className="flex items-center p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200">
+                        <Calendar className="w-4 h-4 text-gray-400 mr-3 flex-shrink-0" />
+                        <span className="text-gray-900 font-medium">
                           {profileData.dateOfBirth ? new Date(profileData.dateOfBirth).toLocaleDateString() : 'Not set'}
                         </span>
                       </div>
@@ -405,13 +417,13 @@ const StudentProfile = () => {
                         rows={3}
                         value={profileData.address}
                         onChange={(e) => handleInputChange('address', e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors duration-200 text-sm resize-none"
                         placeholder="Enter your full address"
                       />
                     ) : (
-                      <div className="flex items-start p-3 bg-gray-50 rounded-lg">
-                        <MapPin className="w-4 h-4 text-gray-400 mr-3 mt-1" />
-                        <span className="text-gray-900">{profileData.address || 'Not set'}</span>
+                      <div className="flex items-start p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200">
+                        <MapPin className="w-4 h-4 text-gray-400 mr-3 mt-1 flex-shrink-0" />
+                        <span className="text-gray-900 font-medium">{profileData.address || 'Not set'}</span>
                       </div>
                     )}
                   </div>
@@ -419,8 +431,8 @@ const StudentProfile = () => {
               </div>
 
               <div>
-                <h4 className="text-lg font-medium text-gray-900 mb-4">Academic Information</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <h4 className="text-lg sm:text-xl font-semibold text-gray-900 mb-6 pb-2 border-b border-gray-200">Academic Information</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Admission Number
@@ -430,12 +442,12 @@ const StudentProfile = () => {
                         type="text"
                         value={profileData.admissionNumber}
                         onChange={(e) => handleInputChange('admissionNumber', e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors duration-200 text-sm"
                         placeholder="e.g., TU2024001"
                       />
                     ) : (
-                      <div className="p-3 bg-gray-50 rounded-lg">
-                        <span className="text-gray-900">{profileData.admissionNumber || 'Not set'}</span>
+                      <div className="p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200">
+                        <span className="text-gray-900 font-medium">{profileData.admissionNumber || 'Not set'}</span>
                       </div>
                     )}
                   </div>
@@ -448,7 +460,7 @@ const StudentProfile = () => {
                       <select
                         value={profileData.grade}
                         onChange={(e) => handleInputChange('grade', e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors duration-200 text-sm"
                       >
                         <option value="">Select Grade</option>
                         {gradeOptions.map(grade => (
@@ -456,8 +468,8 @@ const StudentProfile = () => {
                         ))}
                       </select>
                     ) : (
-                      <div className="p-3 bg-gray-50 rounded-lg">
-                        <span className="text-gray-900">{profileData.grade || 'Not set'}</span>
+                      <div className="p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200">
+                        <span className="text-gray-900 font-medium">{profileData.grade || 'Not set'}</span>
                       </div>
                     )}
                   </div>
@@ -470,7 +482,7 @@ const StudentProfile = () => {
                       <select
                         value={profileData.stream}
                         onChange={(e) => handleInputChange('stream', e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors duration-200 text-sm"
                         disabled={!(profileData.grade === '11th' || profileData.grade === '12th')}
                       >
                         <option value="">Select Stream</option>
@@ -479,8 +491,8 @@ const StudentProfile = () => {
                         ))}
                       </select>
                     ) : (
-                      <div className="p-3 bg-gray-50 rounded-lg">
-                        <span className="text-gray-900">{profileData.stream || 'Not applicable'}</span>
+                      <div className="p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200">
+                        <span className="text-gray-900 font-medium">{profileData.stream || 'Not applicable'}</span>
                       </div>
                     )}
                   </div>
@@ -494,12 +506,12 @@ const StudentProfile = () => {
                         type="text"
                         value={profileData.schoolName}
                         onChange={(e) => handleInputChange('schoolName', e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors duration-200 text-sm"
                         placeholder="Enter your school name"
                       />
                     ) : (
-                      <div className="p-3 bg-gray-50 rounded-lg">
-                        <span className="text-gray-900">{profileData.schoolName || 'Not set'}</span>
+                      <div className="p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200">
+                        <span className="text-gray-900 font-medium">{profileData.schoolName || 'Not set'}</span>
                       </div>
                     )}
                   </div>
@@ -523,7 +535,7 @@ const StudentProfile = () => {
                         ))}
                       </div>
                     ) : (
-                      <div className="p-3 bg-gray-50 rounded-lg">
+                      <div className="p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200">
                         <span className="text-gray-900">
                           {profileData.subjects.length > 0 ? profileData.subjects.join(', ') : 'No subjects selected'}
                         </span>
@@ -534,8 +546,8 @@ const StudentProfile = () => {
               </div>
 
               <div>
-                <h4 className="text-lg font-medium text-gray-900 mb-4">Parent/Guardian Information</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <h4 className="text-lg sm:text-xl font-semibold text-gray-900 mb-6 pb-2 border-b border-gray-200">Parent/Guardian Information</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Parent/Guardian Name
@@ -545,13 +557,13 @@ const StudentProfile = () => {
                         type="text"
                         value={profileData.parentName}
                         onChange={(e) => handleInputChange('parentName', e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors duration-200 text-sm"
                         placeholder="Enter parent/guardian name"
                       />
                     ) : (
                       <div className="flex items-center p-3 bg-gray-50 rounded-lg">
                         <Users className="w-4 h-4 text-gray-400 mr-3" />
-                        <span className="text-gray-900">{profileData.parentName || 'Not set'}</span>
+                        <span className="text-gray-900 font-medium">{profileData.parentName || 'Not set'}</span>
                       </div>
                     )}
                   </div>
@@ -565,13 +577,13 @@ const StudentProfile = () => {
                         type="tel"
                         value={profileData.parentPhoneNumber}
                         onChange={(e) => handleInputChange('parentPhoneNumber', e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors duration-200 text-sm"
                         placeholder="+91 9876543210"
                       />
                     ) : (
                       <div className="flex items-center p-3 bg-gray-50 rounded-lg">
                         <Phone className="w-4 h-4 text-gray-400 mr-3" />
-                        <span className="text-gray-900">{profileData.parentPhoneNumber || 'Not set'}</span>
+                        <span className="text-gray-900 font-medium">{profileData.parentPhoneNumber || 'Not set'}</span>
                       </div>
                     )}
                   </div>
@@ -585,12 +597,12 @@ const StudentProfile = () => {
                         rows={2}
                         value={profileData.previousTuitionExperience}
                         onChange={(e) => handleInputChange('previousTuitionExperience', e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors duration-200 text-sm"
                         placeholder="Brief description of previous tuition experience (optional)"
                       />
                     ) : (
-                      <div className="p-3 bg-gray-50 rounded-lg">
-                        <span className="text-gray-900">{profileData.previousTuitionExperience || 'Not specified'}</span>
+                      <div className="p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200">
+                        <span className="text-gray-900 font-medium">{profileData.previousTuitionExperience || 'Not specified'}</span>
                       </div>
                     )}
                   </div>
@@ -598,7 +610,7 @@ const StudentProfile = () => {
               </div>
 
               <div>
-                <h4 className="text-lg font-medium text-gray-900 mb-4">Emergency Contact</h4>
+                <h4 className="text-lg sm:text-xl font-semibold text-gray-900 mb-6 pb-2 border-b border-gray-200">Emergency Contact</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -609,12 +621,12 @@ const StudentProfile = () => {
                         type="text"
                         value={profileData.emergencyContact.name}
                         onChange={(e) => handleInputChange('emergencyContact.name', e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors duration-200 text-sm"
                         placeholder="e.g., John Smith"
                       />
                     ) : (
-                      <div className="p-3 bg-gray-50 rounded-lg">
-                        <span className="text-gray-900">{profileData.emergencyContact.name || 'Not set'}</span>
+                      <div className="p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200">
+                        <span className="text-gray-900 font-medium">{profileData.emergencyContact.name || 'Not set'}</span>
                       </div>
                     )}
                   </div>
@@ -628,12 +640,12 @@ const StudentProfile = () => {
                         type="tel"
                         value={profileData.emergencyContact.phone}
                         onChange={(e) => handleInputChange('emergencyContact.phone', e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors duration-200 text-sm"
                         placeholder="+91 9876543210"
                       />
                     ) : (
-                      <div className="p-3 bg-gray-50 rounded-lg">
-                        <span className="text-gray-900">{profileData.emergencyContact.phone || 'Not set'}</span>
+                      <div className="p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200">
+                        <span className="text-gray-900 font-medium">{profileData.emergencyContact.phone || 'Not set'}</span>
                       </div>
                     )}
                   </div>
@@ -646,7 +658,7 @@ const StudentProfile = () => {
                       <select
                         value={profileData.emergencyContact.relation}
                         onChange={(e) => handleInputChange('emergencyContact.relation', e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors duration-200 text-sm"
                       >
                         <option value="">Select Relationship</option>
                         <option value="Parent">Parent</option>
@@ -657,8 +669,8 @@ const StudentProfile = () => {
                         <option value="Other">Other</option>
                       </select>
                     ) : (
-                      <div className="p-3 bg-gray-50 rounded-lg">
-                        <span className="text-gray-900">{profileData.emergencyContact.relation || 'Not set'}</span>
+                      <div className="p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200">
+                        <span className="text-gray-900 font-medium">{profileData.emergencyContact.relation || 'Not set'}</span>
                       </div>
                     )}
                   </div>
