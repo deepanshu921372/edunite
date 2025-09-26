@@ -175,6 +175,63 @@ router.get('/classes', authenticateToken, requireRole(['teacher']), requireAppro
   }
 });
 
+// Create a new class (teacher can create their own classes)
+router.post('/classes', authenticateToken, requireRole(['teacher']), requireApproval, async (req, res) => {
+  try {
+    const { name, grade, subject, description, stream } = req.body;
+    const teacherId = req.user._id;
+
+    // Validate required fields
+    if (!name || !grade || !subject) {
+      return res.status(400).json({
+        success: false,
+        error: 'Name, grade, and subject are required'
+      });
+    }
+
+    // Check if class already exists for this teacher with same grade and subject
+    const existingClass = await Class.findOne({
+      teacher: teacherId,
+      grade: grade,
+      subject: subject
+    });
+
+    if (existingClass) {
+      return res.status(400).json({
+        success: false,
+        error: 'You already have a class for this grade and subject'
+      });
+    }
+
+    // Create new class
+    const newClass = new Class({
+      name,
+      grade,
+      subject,
+      description: description || `${subject} class for ${grade} students`,
+      stream: stream || null,
+      teacher: teacherId,
+      students: []
+    });
+
+    await newClass.save();
+
+    // Populate teacher info for response
+    await newClass.populate('teacher', 'name email');
+
+    res.status(201).json({
+      success: true,
+      data: newClass
+    });
+  } catch (error) {
+    console.error('Create class error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
 // Get teacher's timetable
 router.get('/timetable', authenticateToken, requireRole(['teacher']), requireApproval, async (req, res) => {
   try {
@@ -195,10 +252,10 @@ router.get('/timetable', authenticateToken, requireRole(['teacher']), requireApp
 router.post('/timetable', authenticateToken, requireRole(['teacher']), requireApproval, async (req, res) => {
   try {
     const teacherId = req.user._id;
-    const { classId, schedule } = req.body;
+    const { classId, grade, subject, schedule } = req.body;
 
-    if (!classId || !schedule || !Array.isArray(schedule)) {
-      return res.status(400).json({ error: 'Class ID and schedule are required' });
+    if (!classId || !schedule || !Array.isArray(schedule) || !grade || !subject) {
+      return res.status(400).json({ error: 'Class ID, grade, subject, and schedule are required' });
     }
 
     // Verify teacher owns this class
@@ -213,6 +270,8 @@ router.post('/timetable', authenticateToken, requireRole(['teacher']), requireAp
     if (timetable) {
       // Update existing timetable
       timetable.schedule = schedule;
+      timetable.grade = grade;
+      timetable.subject = subject;
       timetable.updatedAt = new Date();
       await timetable.save();
     } else {
@@ -220,6 +279,8 @@ router.post('/timetable', authenticateToken, requireRole(['teacher']), requireAp
       timetable = new Timetable({
         class: classId,
         teacher: teacherId,
+        grade: grade,
+        subject: subject,
         schedule
       });
       await timetable.save();

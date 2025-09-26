@@ -5,7 +5,8 @@ import {
   User,
   BookOpen,
   BarChart3,
-  Calendar
+  Calendar,
+  GraduationCap
 } from 'lucide-react';
 import DashboardLayout from '../../components/shared/DashboardLayout';
 
@@ -14,6 +15,7 @@ import StudentOverview from '../../components/student/StudentOverview';
 import StudentProfile from '../../components/student/StudentProfile';
 import StudyMaterials from '../../components/student/StudyMaterials';
 import AttendanceView from '../../components/student/AttendanceView';
+import StudentClassesManagement from '../../components/student/StudentClassesManagement';
 
 const StudentDashboard = () => {
   const location = useLocation();
@@ -53,6 +55,12 @@ const StudentDashboard = () => {
       onClick: () => handleTabChange('profile')
     },
     {
+      name: 'Classes',
+      icon: GraduationCap,
+      active: activeTab === 'classes',
+      onClick: () => handleTabChange('classes')
+    },
+    {
       name: 'Study Materials',
       icon: BookOpen,
       active: activeTab === 'materials',
@@ -72,6 +80,8 @@ const StudentDashboard = () => {
         return <StudentOverview />;
       case 'profile':
         return <StudentProfile />;
+      case 'classes':
+        return <StudentClassesManagement />;
       case 'materials':
         return <StudyMaterials />;
       case 'attendance':

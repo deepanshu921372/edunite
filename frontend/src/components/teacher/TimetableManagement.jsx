@@ -122,8 +122,27 @@ const TimetableManagement = () => {
       );
 
       if (!targetClass) {
-        toast.error(`No class found for ${formData.grade} - ${formData.subject}. Please contact admin to create this class.`);
-        return;
+        try {
+          // Create the class automatically for the teacher
+          const classData = {
+            name: `${formData.grade} ${formData.subject}`,
+            grade: formData.grade,
+            subject: formData.subject,
+            description: `${formData.subject} class for ${formData.grade} students`,
+            teacherId: teacherProfile.uid || teacherProfile._id
+          };
+
+          const createResponse = await teacherAPI.createClass(classData);
+          targetClass = createResponse.data || createResponse;
+          toast.success(`Created new class: ${formData.grade} - ${formData.subject}`);
+
+          // Refresh classes list to include the new class
+          await fetchData();
+        } catch (error) {
+          console.error('Error creating class:', error);
+          toast.error('Failed to create class. Please try again.');
+          return;
+        }
       }
 
       // Create schedule array for the timetable API
@@ -138,6 +157,8 @@ const TimetableManagement = () => {
 
       const submissionData = {
         classId: targetClass._id || targetClass.id,
+        grade: formData.grade,
+        subject: formData.subject,
         schedule: scheduleData
       };
 

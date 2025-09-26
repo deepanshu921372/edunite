@@ -11,6 +11,14 @@ const timetableSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
+  grade: {
+    type: String,
+    required: true
+  },
+  subject: {
+    type: String,
+    required: true
+  },
   schedule: [{
     day: {
       type: String,

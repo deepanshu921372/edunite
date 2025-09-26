@@ -130,6 +130,9 @@ export const teacherAPI = {
   getTeacherStats: () => api.get('/teacher/stats'),
   getMyClasses: () => api.get('/teacher/classes'),
 
+  // Classes
+  createClass: (classData) => api.post('/teacher/classes', classData),
+
   // Timetable
   getTimetable: () => api.get('/teacher/timetable'),
   createTimetableEntry: (entryData) => api.post('/teacher/timetable', entryData),
@@ -157,6 +160,9 @@ export const teacherAPI = {
 export const studentAPI = {
   // Dashboard
   getStudentStats: () => api.get('/student/stats'),
+
+  // Classes
+  getClasses: () => api.get('/student/classes'),
 
   // Attendance
   getMyAttendance: (startDate, endDate) => api.get('/student/attendance', {

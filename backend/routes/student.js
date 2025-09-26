@@ -730,4 +730,58 @@ router.get('/stats', authenticateToken, requireRole(['student']), requireApprova
   }
 });
 
+// Get classes available for student's grade
+router.get('/classes', authenticateToken, requireRole(['student']), requireApproval, async (req, res) => {
+  try {
+    const studentId = req.user._id;
+
+    // Get student profile to find their grade
+    const student = await User.findById(studentId).select('profile');
+    if (!student || !student.profile || !student.profile.grade) {
+      return res.status(400).json({
+        success: false,
+        error: 'Student grade not found in profile'
+      });
+    }
+
+    const studentGrade = student.profile.grade;
+
+    // Get all timetables for the student's grade
+    const timetables = await Timetable.find({ grade: studentGrade })
+      .populate('teacher', 'name email profile')
+      .populate('class', 'name description')
+      .sort({ subject: 1 });
+
+    // Transform the data to show class schedule info
+    const classesWithSchedule = timetables.map(timetable => ({
+      id: timetable._id,
+      classId: timetable.class._id,
+      className: timetable.class.name,
+      subject: timetable.subject,
+      grade: timetable.grade,
+      teacher: {
+        id: timetable.teacher._id,
+        name: timetable.teacher.name,
+        email: timetable.teacher.email,
+        specialization: timetable.teacher.profile?.specialization || timetable.subject
+      },
+      schedule: timetable.schedule,
+      description: timetable.class.description,
+      createdAt: timetable.createdAt
+    }));
+
+    res.json({
+      success: true,
+      data: classesWithSchedule,
+      studentGrade: studentGrade
+    });
+  } catch (error) {
+    console.error('Get student classes error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
 module.exports = router;
