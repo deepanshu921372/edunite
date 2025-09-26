@@ -10,7 +10,8 @@ import {
   Search,
   Filter,
   Shield,
-  MessageSquare
+  MessageSquare,
+  TrendingUp
 } from 'lucide-react';
 import { adminAPI } from '../../services/api';
 import LoadingSpinner from '../shared/LoadingSpinner';
@@ -558,77 +559,95 @@ const RequestsManagement = () => {
       {/* Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="bg-white p-6 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-300"
+          initial={{ opacity: 0, y: 30, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.1, type: "spring", stiffness: 100 }}
+          whileHover={{ y: -5, scale: 1.02, transition: { duration: 0.2 } }}
+          className="bg-white rounded-2xl shadow-lg hover:shadow-xl shadow-yellow-200 transition-all duration-300 cursor-pointer group overflow-hidden relative"
         >
-          <div className="flex items-center">
-            <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-yellow-100 to-amber-100 rounded-xl flex items-center justify-center shadow-sm">
-              <AlertTriangle className="w-5 h-5 text-yellow-600" />
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-amber-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300" />
+          <div className="p-6 relative">
+            <div className="flex items-center justify-between mb-4">
+              <div className="bg-amber-50 p-3 rounded-xl shadow-sm group-hover:shadow-md transition-shadow duration-300">
+                <AlertTriangle className="w-7 h-7 text-amber-700" />
+              </div>
+              {stats.pending > 0 && (
+                <div className="px-2 py-1 bg-amber-50 text-amber-700 text-xs font-semibold rounded-full flex items-center space-x-1">
+                  <TrendingUp className="w-3 h-3" />
+                  <span>New!</span>
+                </div>
+              )}
             </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-500">Pending</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {stats.pending}
-              </p>
+            <div className="space-y-2">
+              <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Pending</h3>
+              <p className="text-3xl font-bold text-gray-900">{stats.pending}</p>
             </div>
           </div>
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="bg-white p-6 rounded-lg shadow-sm border border-gray-200"
+          initial={{ opacity: 0, y: 30, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.2, type: "spring", stiffness: 100 }}
+          whileHover={{ y: -5, scale: 1.02, transition: { duration: 0.2 } }}
+          className="bg-white rounded-2xl shadow-lg hover:shadow-xl shadow-green-200 transition-all duration-300 cursor-pointer group overflow-hidden relative"
         >
-          <div className="flex items-center">
-            <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-green-100 to-emerald-100 rounded-xl flex items-center justify-center shadow-sm">
-              <Check className="w-5 h-5 text-green-600" />
+          <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-green-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300" />
+          <div className="p-6 relative">
+            <div className="flex items-center justify-between mb-4">
+              <div className="bg-green-50 p-3 rounded-xl shadow-sm group-hover:shadow-md transition-shadow duration-300">
+                <Check className="w-7 h-7 text-green-700" />
+              </div>
+              <div className="px-2 py-1 bg-green-50 text-green-700 text-xs font-semibold rounded-full flex items-center space-x-1">
+                <TrendingUp className="w-3 h-3" />
+                <span>+8%</span>
+              </div>
             </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-500">Approved</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {stats.approved}
-              </p>
+            <div className="space-y-2">
+              <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Approved</h3>
+              <p className="text-3xl font-bold text-gray-900">{stats.approved}</p>
             </div>
           </div>
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="bg-white p-6 rounded-lg shadow-sm border border-gray-200"
+          initial={{ opacity: 0, y: 30, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.3, type: "spring", stiffness: 100 }}
+          whileHover={{ y: -5, scale: 1.02, transition: { duration: 0.2 } }}
+          className="bg-white rounded-2xl shadow-lg hover:shadow-xl shadow-red-200 transition-all duration-300 cursor-pointer group overflow-hidden relative"
         >
-          <div className="flex items-center">
-            <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-red-100 to-rose-100 rounded-xl flex items-center justify-center shadow-sm">
-              <X className="w-5 h-5 text-red-600" />
+          <div className="absolute inset-0 bg-gradient-to-br from-red-500 to-red-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300" />
+          <div className="p-6 relative">
+            <div className="flex items-center justify-between mb-4">
+              <div className="bg-red-50 p-3 rounded-xl shadow-sm group-hover:shadow-md transition-shadow duration-300">
+                <X className="w-7 h-7 text-red-700" />
+              </div>
             </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-500">Rejected</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {stats.rejected}
-              </p>
+            <div className="space-y-2">
+              <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Rejected</h3>
+              <p className="text-3xl font-bold text-gray-900">{stats.rejected}</p>
             </div>
           </div>
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.5 }}
-          className="bg-white p-6 rounded-lg shadow-sm border border-gray-200"
+          initial={{ opacity: 0, y: 30, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.4, type: "spring", stiffness: 100 }}
+          whileHover={{ y: -5, scale: 1.02, transition: { duration: 0.2 } }}
+          className="bg-white rounded-2xl shadow-lg hover:shadow-xl shadow-gray-200 transition-all duration-300 cursor-pointer group overflow-hidden relative"
         >
-          <div className="flex items-center">
-            <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl flex items-center justify-center shadow-md">
-              <Shield className="w-5 h-5 text-white" />
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 opacity-0 group-hover:opacity-5 transition-opacity duration-300" />
+          <div className="p-6 relative">
+            <div className="flex items-center justify-between mb-4">
+              <div className="bg-gray-50 p-3 rounded-xl shadow-sm group-hover:shadow-md transition-shadow duration-300">
+                <Shield className="w-7 h-7 text-gray-700" />
+              </div>
             </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-500">Blocked</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {stats.blocked || 0}
-              </p>
+            <div className="space-y-2">
+              <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Blocked</h3>
+              <p className="text-3xl font-bold text-gray-900">{stats.blocked || 0}</p>
             </div>
           </div>
         </motion.div>

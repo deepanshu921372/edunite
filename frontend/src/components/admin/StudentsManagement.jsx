@@ -9,7 +9,9 @@ import {
   AlertTriangle,
   BookOpen,
   Phone,
-  MapPin
+  MapPin,
+  Filter,
+  TrendingUp
 } from 'lucide-react';
 import { adminAPI } from '../../services/api';
 import LoadingSpinner from '../shared/LoadingSpinner';
@@ -103,11 +105,11 @@ const StudentsManagement = () => {
 
   const getStatusColor = (isApproved) => {
     if (isApproved === true) {
-      return 'bg-green-100 text-green-800';
+      return 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 shadow-sm';
     } else if (isApproved === false || isApproved === undefined) {
-      return 'bg-yellow-100 text-yellow-800';
+      return 'bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-800 shadow-sm';
     } else {
-      return 'bg-gray-100 text-gray-800';
+      return 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 shadow-sm';
     }
   };
 
@@ -155,59 +157,85 @@ const StudentsManagement = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="bg-white p-6 rounded-lg shadow-sm border border-gray-200"
+          initial={{ opacity: 0, y: 30, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.1, type: "spring", stiffness: 100 }}
+          whileHover={{ y: -5, scale: 1.02, transition: { duration: 0.2 } }}
+          className="bg-white rounded-2xl shadow-lg hover:shadow-xl shadow-blue-200 transition-all duration-300 cursor-pointer group overflow-hidden relative"
         >
-          <div className="flex items-center">
-            <div className="bg-blue-100 p-2 rounded-lg">
-              <GraduationCap className="w-6 h-6 text-blue-600" />
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300" />
+          <div className="p-6 relative">
+            <div className="flex items-center justify-between mb-4">
+              <div className="bg-blue-50 p-3 rounded-xl shadow-sm group-hover:shadow-md transition-shadow duration-300">
+                <GraduationCap className="w-7 h-7 text-blue-700" />
+              </div>
+              <div className="px-2 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full flex items-center space-x-1">
+                <TrendingUp className="w-3 h-3" />
+                <span>+12%</span>
+              </div>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Total Students</p>
-              <p className="text-2xl font-bold text-gray-900">{totalStudents}</p>
+            <div className="space-y-2">
+              <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Total Students</h3>
+              <p className="text-3xl font-bold text-gray-900">{totalStudents}</p>
             </div>
           </div>
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="bg-white p-6 rounded-lg shadow-sm border border-gray-200"
+          initial={{ opacity: 0, y: 30, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.2, type: "spring", stiffness: 100 }}
+          whileHover={{ y: -5, scale: 1.02, transition: { duration: 0.2 } }}
+          className="bg-white rounded-2xl shadow-lg hover:shadow-xl shadow-green-200 transition-all duration-300 cursor-pointer group overflow-hidden relative"
         >
-          <div className="flex items-center">
-            <div className="bg-green-100 p-2 rounded-lg">
-              <User className="w-6 h-6 text-green-600" />
+          <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-green-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300" />
+          <div className="p-6 relative">
+            <div className="flex items-center justify-between mb-4">
+              <div className="bg-green-50 p-3 rounded-xl shadow-sm group-hover:shadow-md transition-shadow duration-300">
+                <User className="w-7 h-7 text-green-700" />
+              </div>
+              <div className="px-2 py-1 bg-green-50 text-green-700 text-xs font-semibold rounded-full flex items-center space-x-1">
+                <TrendingUp className="w-3 h-3" />
+                <span>+8%</span>
+              </div>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Approved</p>
-              <p className="text-2xl font-bold text-gray-900">{approvedStudents}</p>
+            <div className="space-y-2">
+              <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Approved</h3>
+              <p className="text-3xl font-bold text-gray-900">{approvedStudents}</p>
             </div>
           </div>
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="bg-white p-6 rounded-lg shadow-sm border border-gray-200"
+          initial={{ opacity: 0, y: 30, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.3, type: "spring", stiffness: 100 }}
+          whileHover={{ y: -5, scale: 1.02, transition: { duration: 0.2 } }}
+          className="bg-white rounded-2xl shadow-lg hover:shadow-xl shadow-yellow-200 transition-all duration-300 cursor-pointer group overflow-hidden relative"
         >
-          <div className="flex items-center">
-            <div className="bg-yellow-100 p-2 rounded-lg">
-              <AlertTriangle className="w-6 h-6 text-yellow-600" />
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-amber-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300" />
+          <div className="p-6 relative">
+            <div className="flex items-center justify-between mb-4">
+              <div className="bg-amber-50 p-3 rounded-xl shadow-sm group-hover:shadow-md transition-shadow duration-300">
+                <AlertTriangle className="w-7 h-7 text-amber-700" />
+              </div>
+              {pendingStudents > 0 && (
+                <div className="px-2 py-1 bg-amber-50 text-amber-700 text-xs font-semibold rounded-full flex items-center space-x-1">
+                  <TrendingUp className="w-3 h-3" />
+                  <span>New!</span>
+                </div>
+              )}
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Pending</p>
-              <p className="text-2xl font-bold text-gray-900">{pendingStudents}</p>
+            <div className="space-y-2">
+              <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Pending</h3>
+              <p className="text-3xl font-bold text-gray-900">{pendingStudents}</p>
             </div>
           </div>
         </motion.div>
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+      <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">
@@ -217,15 +245,16 @@ const StudentsManagement = () => {
                 placeholder="Search by name, email, grade, or roll number..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm cursor-text"
               />
             </div>
           </div>
-          <div className="flex gap-4">
+          <div className="flex items-center space-x-2">
+            <Filter className="text-gray-400 w-5 h-5" />
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="border cursor-pointer border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm font-medium"
             >
               <option value="all">All Status</option>
               <option value="approved">Approved</option>
@@ -235,7 +264,7 @@ const StudentsManagement = () => {
             <select
               value={gradeFilter}
               onChange={(e) => setGradeFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="border cursor-pointer border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm font-medium"
             >
               <option value="all">All Grades</option>
               {uniqueGrades.map(grade => (
@@ -246,15 +275,15 @@ const StudentsManagement = () => {
         </div>
       </div>
 
-      {/* Students Grid */}
+      {/* Students Table */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+        className="bg-white shadow-lg rounded-xl overflow-hidden border border-gray-100"
       >
         {filteredStudents.length === 0 ? (
-          <div className="col-span-full text-center py-12">
+          <div className="text-center py-12">
             <AlertTriangle className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-2 text-sm font-medium text-gray-900">No students found</h3>
             <p className="mt-1 text-sm text-gray-500">
@@ -262,119 +291,147 @@ const StudentsManagement = () => {
             </p>
           </div>
         ) : (
-          filteredStudents.map((student, index) => (
-            <motion.div
-              key={student.uid || student._id || index}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              className="bg-white rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-300"
-            >
-              <div className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center">
-                    <div className="bg-blue-100 p-2 rounded-lg">
-                      <GraduationCap className="w-6 h-6 text-blue-600" />
-                    </div>
-                    <div className="ml-3">
-                      <h3 className="text-lg font-medium text-gray-900">
-                        {student.displayName || student.name}
-                      </h3>
-                      <p className="text-sm text-gray-500">{student.email}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(student.isApproved)}`}>
-                      {getStatusText(student.isApproved)}
-                    </span>
-                    <button
-                      onClick={() => handleDeleteStudent(student.uid, student.displayName || student.name)}
-                      disabled={processingId === student.uid}
-                      className="text-gray-400 hover:text-red-600 disabled:opacity-50 transition-colors duration-200"
-                    >
-                      {processingId === student.uid ? (
-                        <LoadingSpinner size="sm" message="" />
-                      ) : (
-                        <Trash2 className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="mt-4 space-y-3">
-                  {student.profile?.rollNumber && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <BookOpen className="w-4 h-4 mr-2 text-gray-400" />
-                      <span className="font-medium">Roll Number:</span>
-                      <span className="ml-1">{student.profile.rollNumber}</span>
-                    </div>
-                  )}
-
-                  {student.profile?.grade && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <GraduationCap className="w-4 h-4 mr-2 text-gray-400" />
-                      <span className="font-medium">Grade:</span>
-                      <span className="ml-1">{student.profile.grade}</span>
-                    </div>
-                  )}
-
-                  {student.profile?.stream && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <BookOpen className="w-4 h-4 mr-2 text-gray-400" />
-                      <span className="font-medium">Stream:</span>
-                      <span className="ml-1">{student.profile.stream}</span>
-                    </div>
-                  )}
-
-                  {student.profile?.phoneNumber && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Phone className="w-4 h-4 mr-2 text-gray-400" />
-                      <span className="font-medium">Phone:</span>
-                      <span className="ml-1">{student.profile.phoneNumber}</span>
-                    </div>
-                  )}
-
-                  {student.profile?.address && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <MapPin className="w-4 h-4 mr-2 text-gray-400" />
-                      <span className="font-medium">Address:</span>
-                      <span className="ml-1 truncate">{student.profile.address}</span>
-                    </div>
-                  )}
-
-                  {student.profile?.parentName && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <User className="w-4 h-4 mr-2 text-gray-400" />
-                      <span className="font-medium">Parent:</span>
-                      <span className="ml-1">{student.profile.parentName}</span>
-                    </div>
-                  )}
-
-                  {student.profile?.parentPhone && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Phone className="w-4 h-4 mr-2 text-gray-400" />
-                      <span className="font-medium">Parent Phone:</span>
-                      <span className="ml-1">{student.profile.parentPhone}</span>
-                    </div>
-                  )}
-
-                  {student.profile?.dateOfBirth && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Calendar className="w-4 h-4 mr-2 text-gray-400" />
-                      <span className="font-medium">Date of Birth:</span>
-                      <span className="ml-1">{formatDate(student.profile.dateOfBirth)}</span>
-                    </div>
-                  )}
-
-                  <div className="flex items-center text-sm text-gray-600">
-                    <Calendar className="w-4 h-4 mr-2 text-gray-400" />
-                    <span className="font-medium">Joined:</span>
-                    <span className="ml-1">{formatDate(student.createdAt)}</span>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          ))
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-100">
+              <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Student
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Email
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Roll Number
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Grade & Stream
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Phone
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Parent Info
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Date of Birth
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Joined
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-50">
+                {filteredStudents.map((student, index) => (
+                  <motion.tr
+                    key={student.uid || student._id || index}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.4, delay: index * 0.1 }}
+                    className="hover:bg-blue-50 transition-colors duration-200 group"
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-10 w-10">
+                          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow duration-200">
+                            <span className="text-white text-sm font-medium">
+                              {(student.displayName || student.name || 'S').charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-semibold text-gray-900 group-hover:text-blue-900 transition-colors duration-200">
+                            {student.displayName || student.name}
+                          </div>
+                          <div className="text-xs text-gray-500 font-mono">
+                            ID: {(student.uid || student._id || '').slice(0, 8)}...
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{student.email}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="inline-flex px-3 py-1.5 text-xs font-semibold rounded-full bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 shadow-sm">
+                        {student.profile?.rollNumber || 'N/A'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-900">
+                        {student.profile?.grade && (
+                          <div className="mb-1">
+                            <span className="font-medium text-gray-700">Grade:</span> {student.profile.grade}
+                          </div>
+                        )}
+                        {student.profile?.stream && (
+                          <div>
+                            <span className="font-medium text-gray-700">Stream:</span> {student.profile.stream}
+                          </div>
+                        )}
+                        {!student.profile?.grade && !student.profile?.stream && (
+                          <span className="text-gray-500">N/A</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {student.profile?.phoneNumber || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-900">
+                        {student.profile?.parentName && (
+                          <div className="mb-1">
+                            <span className="font-medium text-gray-700">Name:</span> {student.profile.parentName}
+                          </div>
+                        )}
+                        {student.profile?.parentPhone && (
+                          <div>
+                            <span className="font-medium text-gray-700">Phone:</span> {student.profile.parentPhone}
+                          </div>
+                        )}
+                        {!student.profile?.parentName && !student.profile?.parentPhone && (
+                          <span className="text-gray-500">N/A</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {student.profile?.dateOfBirth ? formatDate(student.profile.dateOfBirth) : 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {formatDate(student.createdAt)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-3 py-1.5 text-xs font-semibold rounded-full ${getStatusColor(student.isApproved)}`}>
+                        {getStatusText(student.isApproved)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button
+                        onClick={() => handleDeleteStudent(student.uid, student.displayName || student.name)}
+                        disabled={processingId === student.uid}
+                        className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 cursor-pointer transition-all duration-200"
+                      >
+                        {processingId === student.uid ? (
+                          <LoadingSpinner size="sm" message="" />
+                        ) : (
+                          <>
+                            <Trash2 className="w-3 h-3 mr-1" />
+                            Delete
+                          </>
+                        )}
+                      </button>
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </motion.div>
     </div>
