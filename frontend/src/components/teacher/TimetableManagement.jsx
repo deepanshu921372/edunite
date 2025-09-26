@@ -248,6 +248,32 @@ const TimetableManagement = () => {
     });
   };
 
+  const isClassOver = (dayName, endTime, classDate) => {
+    const now = new Date();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set to start of today
+
+    // If the class date is in the past (before today), it's over
+    if (classDate) {
+      const classDayStart = new Date(classDate);
+      classDayStart.setHours(0, 0, 0, 0);
+
+      if (classDayStart < today) {
+        return true;
+      }
+
+      // If it's today, check if current time is past the class end time
+      if (classDayStart.getTime() === today.getTime()) {
+        const classEndTime = new Date();
+        const [hours, minutes] = endTime.split(':').map(Number);
+        classEndTime.setHours(hours, minutes, 0, 0);
+        return now > classEndTime;
+      }
+    }
+
+    return false;
+  };
+
   const getClassesForDay = (dayName) => {
     const dayClasses = [];
 
@@ -357,59 +383,84 @@ const TimetableManagement = () => {
               </div>
 
               <div className="space-y-2">
-                {getClassesForDay(day).map((entry, index) => (
-                  <motion.div
-                    key={entry.id}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.3, delay: index * 0.1 }}
-                    className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-r-lg hover:bg-blue-100 transition-colors duration-200 group"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-medium text-blue-900 truncate">
-                          {(() => {
-                            const classInfo = classes.find((c) => c._id === entry.class || c.id === entry.class);
-                            if (classInfo) {
-                              return `${classInfo.grade} - ${classInfo.subject}`;
-                            }
-                            return entry.subject ? `${entry.subject}` : "Unknown Class";
-                          })()}
-                        </h4>
-                        <div className="flex items-center mt-1 text-xs text-blue-700">
-                          <Clock className="w-3 h-3 mr-1" />
-                          {formatTime(entry.startTime)} -{" "}
-                          {formatTime(entry.endTime)}
+                {getClassesForDay(day).map((entry, index) => {
+                  const classDate = weekDates[dayIndex];
+                  const classOver = isClassOver(day, entry.endTime, classDate);
+                  return (
+                    <motion.div
+                      key={entry.id}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.3, delay: index * 0.1 }}
+                      className={`${
+                        classOver
+                          ? "bg-gray-50 border-l-4 border-gray-400"
+                          : "bg-blue-50 border-l-4 border-blue-400"
+                      } p-3 rounded-r-lg hover:${
+                        classOver ? "bg-gray-100" : "bg-blue-100"
+                      } transition-colors duration-200 group relative`}
+                    >
+                      {/* Class Over Overlay */}
+                      {classOver && (
+                        <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                          Class Over
                         </div>
-                        {entry.location && (
-                          <div className="flex items-center mt-1 text-xs text-blue-700">
-                            <MapPin className="w-3 h-3 mr-1" />
-                            {entry.location}
+                      )}
+
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0 pr-16">
+                          <h4 className={`text-sm font-medium truncate ${
+                            classOver ? "text-gray-600" : "text-blue-900"
+                          }`}>
+                            {(() => {
+                              const classInfo = classes.find((c) => c._id === entry.class || c.id === entry.class);
+                              if (classInfo) {
+                                return `${classInfo.grade} - ${classInfo.subject}`;
+                              }
+                              return entry.subject ? `${entry.subject}` : "Unknown Class";
+                            })()}
+                          </h4>
+                          <div className={`flex items-center mt-1 text-xs ${
+                            classOver ? "text-gray-500" : "text-blue-700"
+                          }`}>
+                            <Clock className="w-3 h-3 mr-1" />
+                            {formatTime(entry.startTime)} -{" "}
+                            {formatTime(entry.endTime)}
                           </div>
-                        )}
-                      </div>
-                      <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                        <button
-                          onClick={() => handleEdit(entry)}
-                          className="p-1 text-blue-600 hover:text-blue-800"
-                        >
-                          <Edit3 className="w-3 h-3" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(entry.id)}
-                          disabled={processingId === entry.id}
-                          className="p-1 text-red-600 hover:text-red-800 disabled:opacity-50"
-                        >
-                          {processingId === entry.id ? (
-                            <LoadingSpinner size="sm" message="" />
-                          ) : (
-                            <Trash2 className="w-3 h-3" />
+                          {entry.location && (
+                            <div className={`flex items-center mt-1 text-xs ${
+                              classOver ? "text-gray-500" : "text-blue-700"
+                            }`}>
+                              <MapPin className="w-3 h-3 mr-1" />
+                              {entry.location}
+                            </div>
                           )}
-                        </button>
+                        </div>
+                        <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                          <button
+                            onClick={() => handleEdit(entry)}
+                            className={`p-1 ${
+                              classOver ? "text-gray-500 hover:text-gray-700" : "text-blue-600 hover:text-blue-800"
+                            }`}
+                          >
+                            <Edit3 className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(entry.id)}
+                            disabled={processingId === entry.id}
+                            className="p-1 text-red-600 hover:text-red-800 disabled:opacity-50"
+                          >
+                            {processingId === entry.id ? (
+                              <LoadingSpinner size="sm" message="" />
+                            ) : (
+                              <Trash2 className="w-3 h-3" />
+                            )}
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  );
+                })}
 
                 {getClassesForDay(day).length === 0 && (
                   <div className="text-center py-8 text-gray-400">
