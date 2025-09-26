@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Upload,
   FileText,
@@ -12,31 +12,32 @@ import {
   Filter,
   Plus,
   X,
-  BookOpen
-} from 'lucide-react';
-import { teacherAPI, commonAPI } from '../../services/api';
-import LoadingSpinner from '../shared/LoadingSpinner';
-import toast from 'react-hot-toast';
+  BookOpen,
+} from "lucide-react";
+import { teacherAPI, commonAPI } from "../../services/api";
+import LoadingSpinner from "../shared/LoadingSpinner";
+import toast from "react-hot-toast";
 
 const MaterialsManagement = () => {
   const [materials, setMaterials] = useState([]);
   const [classes, setClasses] = useState([]);
+  const [teacherProfile, setTeacherProfile] = useState(null);
   const [filteredMaterials, setFilteredMaterials] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterClass, setFilterClass] = useState('all');
-  const [filterType, setFilterType] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterClass, setFilterClass] = useState("all");
+  const [filterType, setFilterType] = useState("all");
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [processingId, setProcessingId] = useState(null);
   const fileInputRef = useRef(null);
 
   const [uploadForm, setUploadForm] = useState({
-    title: '',
-    description: '',
-    classId: '',
-    subject: '',
-    files: []
+    title: "",
+    description: "",
+    classId: "",
+    subject: "",
+    files: [],
   });
 
   useEffect(() => {
@@ -58,28 +59,29 @@ const MaterialsManagement = () => {
     if (showUploadModal) {
       document.addEventListener("keydown", handleEscKey);
       // Prevent body scroll when modal is open
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
       return () => {
         document.removeEventListener("keydown", handleEscKey);
-        document.body.style.overflow = 'unset';
+        document.body.style.overflow = "unset";
       };
     }
   }, [showUploadModal]);
 
   const fetchData = async () => {
     try {
-      const [materialsResponse, classesResponse] = await Promise.all([
-        teacherAPI.getMaterials(),
-        teacherAPI.getMyClasses()
-      ]);
+      const [materialsResponse, classesResponse, profileResponse] =
+        await Promise.all([
+          teacherAPI.getMaterials(),
+          teacherAPI.getMyClasses(),
+          teacherAPI.getProfile(),
+        ]);
 
-      console.log('Materials response:', materialsResponse);
-      console.log('Classes response:', classesResponse);
       setMaterials(materialsResponse.data || materialsResponse || []);
       setClasses(classesResponse.data || classesResponse || []);
+      setTeacherProfile(profileResponse.data || profileResponse || null);
     } catch (error) {
-      console.error('Error fetching data:', error);
-      toast.error('Failed to load materials');
+      console.error("Error fetching data:", error);
+      toast.error("Failed to load materials");
     } finally {
       setLoading(false);
     }
@@ -91,20 +93,27 @@ const MaterialsManagement = () => {
     let filtered = materialsList;
 
     if (searchTerm) {
-      filtered = filtered.filter(material =>
-        material.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        material.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        material.subject?.toLowerCase().includes(searchTerm.toLowerCase())
+      filtered = filtered.filter(
+        (material) =>
+          material.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          material.description
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          material.subject?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
-    if (filterClass !== 'all') {
-      filtered = filtered.filter(material => material.classId === filterClass);
+    if (filterClass !== "all") {
+      filtered = filtered.filter(
+        (material) => material.classId === filterClass
+      );
     }
 
-    if (filterType !== 'all') {
-      filtered = filtered.filter(material =>
-        Array.isArray(material.files) && material.files.some(file => getFileType(file.name) === filterType)
+    if (filterType !== "all") {
+      filtered = filtered.filter(
+        (material) =>
+          Array.isArray(material.files) &&
+          material.files.some((file) => getFileType(file.name) === filterType)
       );
     }
 
@@ -112,30 +121,32 @@ const MaterialsManagement = () => {
   };
 
   const getFileType = (fileName) => {
-    const extension = fileName.split('.').pop().toLowerCase();
+    const extension = fileName.split(".").pop().toLowerCase();
 
-    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) return 'image';
-    if (['mp4', 'avi', 'mov', 'wmv', 'webm'].includes(extension)) return 'video';
-    if (['pdf'].includes(extension)) return 'pdf';
-    if (['doc', 'docx'].includes(extension)) return 'document';
-    if (['ppt', 'pptx'].includes(extension)) return 'presentation';
-    if (['xls', 'xlsx'].includes(extension)) return 'spreadsheet';
+    if (["jpg", "jpeg", "png", "gif", "webp"].includes(extension))
+      return "image";
+    if (["mp4", "avi", "mov", "wmv", "webm"].includes(extension))
+      return "video";
+    if (["pdf"].includes(extension)) return "pdf";
+    if (["doc", "docx"].includes(extension)) return "document";
+    if (["ppt", "pptx"].includes(extension)) return "presentation";
+    if (["xls", "xlsx"].includes(extension)) return "spreadsheet";
 
-    return 'file';
+    return "file";
   };
 
   const getFileIcon = (fileName) => {
     const type = getFileType(fileName);
 
     switch (type) {
-      case 'image':
+      case "image":
         return <Image className="w-5 h-5 text-green-500" />;
-      case 'video':
+      case "video":
         return <Video className="w-5 h-5 text-red-500" />;
-      case 'pdf':
-      case 'document':
-      case 'presentation':
-      case 'spreadsheet':
+      case "pdf":
+      case "document":
+      case "presentation":
+      case "spreadsheet":
         return <FileText className="w-5 h-5 text-blue-500" />;
       default:
         return <File className="w-5 h-5 text-gray-500" />;
@@ -143,36 +154,36 @@ const MaterialsManagement = () => {
   };
 
   const formatFileSize = (bytes) => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) return "0 Bytes";
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
   const handleFileSelect = (e) => {
     const selectedFiles = Array.from(e.target.files);
-    setUploadForm(prev => ({
+    setUploadForm((prev) => ({
       ...prev,
-      files: [...prev.files, ...selectedFiles]
+      files: [...prev.files, ...selectedFiles],
     }));
   };
 
   const handleRemoveFile = (index) => {
-    setUploadForm(prev => ({
+    setUploadForm((prev) => ({
       ...prev,
-      files: prev.files.filter((_, i) => i !== index)
+      files: prev.files.filter((_, i) => i !== index),
     }));
   };
 
   const handleCloseModal = useCallback(() => {
     setShowUploadModal(false);
     setUploadForm({
-      title: '',
-      description: '',
-      classId: '',
-      subject: '',
-      files: []
+      title: "",
+      description: "",
+      classId: "",
+      subject: "",
+      files: [],
     });
   }, []);
 
@@ -183,8 +194,14 @@ const MaterialsManagement = () => {
   const handleUpload = async (e) => {
     e.preventDefault();
 
-    if (!uploadForm.title || !uploadForm.classId || uploadForm.files.length === 0) {
-      toast.error('Please fill in all required fields and select at least one file');
+    if (
+      !uploadForm.title ||
+      !uploadForm.classId ||
+      uploadForm.files.length === 0
+    ) {
+      toast.error(
+        "Please fill in all required fields and select at least one file"
+      );
       return;
     }
 
@@ -193,12 +210,12 @@ const MaterialsManagement = () => {
       // Upload each file
       const uploadedFiles = [];
       for (const file of uploadForm.files) {
-        const uploadResponse = await commonAPI.uploadFile(file, 'material');
+        const uploadResponse = await commonAPI.uploadFile(file, "material");
         uploadedFiles.push({
           name: file.name,
           size: file.size,
           url: uploadResponse.data.url,
-          type: getFileType(file.name)
+          type: getFileType(file.name),
         });
       }
 
@@ -208,36 +225,39 @@ const MaterialsManagement = () => {
         description: uploadForm.description,
         classId: uploadForm.classId,
         subject: uploadForm.subject,
-        files: uploadedFiles
+        files: uploadedFiles,
       };
 
       await teacherAPI.uploadMaterial(materialData);
-      toast.success('Materials uploaded successfully');
+      toast.success("Materials uploaded successfully");
 
       handleCloseModal();
       fetchData();
-
     } catch (error) {
-      console.error('Error uploading materials:', error);
-      toast.error('Failed to upload materials');
+      console.error("Error uploading materials:", error);
+      toast.error("Failed to upload materials");
     } finally {
       setUploading(false);
     }
   };
 
   const handleDelete = async (materialId, title) => {
-    if (!window.confirm(`Are you sure you want to delete "${title}"? This action cannot be undone.`)) {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete "${title}"? This action cannot be undone.`
+      )
+    ) {
       return;
     }
 
     setProcessingId(materialId);
     try {
       await teacherAPI.deleteMaterial(materialId);
-      toast.success('Material deleted successfully');
+      toast.success("Material deleted successfully");
       fetchData();
     } catch (error) {
-      console.error('Error deleting material:', error);
-      toast.error('Failed to delete material');
+      console.error("Error deleting material:", error);
+      toast.error("Failed to delete material");
     } finally {
       setProcessingId(null);
     }
@@ -290,8 +310,8 @@ const MaterialsManagement = () => {
                 className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="all">All Classes</option>
-                {classes.map(cls => (
-                  <option key={cls.id} value={cls.id}>
+                {(classes || []).map((cls, index) => (
+                  <option key={cls.id || index} value={cls.id}>
                     {cls.name}
                   </option>
                 ))}
@@ -323,96 +343,102 @@ const MaterialsManagement = () => {
         {!Array.isArray(filteredMaterials) || filteredMaterials.length === 0 ? (
           <div className="col-span-full text-center py-12">
             <BookOpen className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No materials found</h3>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">
+              No materials found
+            </h3>
             <p className="mt-1 text-sm text-gray-500">
-              {searchTerm || filterClass !== 'all' || filterType !== 'all'
-                ? 'Try adjusting your search or filter criteria.'
-                : 'Get started by uploading your first study material.'}
+              {searchTerm || filterClass !== "all" || filterType !== "all"
+                ? "Try adjusting your search or filter criteria."
+                : "Get started by uploading your first study material."}
             </p>
           </div>
         ) : (
-          (Array.isArray(filteredMaterials) ? filteredMaterials : []).map((material, index) => (
-            <motion.div
-              key={material.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              className="bg-white rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-300"
-            >
-              <div className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-medium text-gray-900 mb-1">
-                      {material.title}
-                    </h3>
-                    <p className="text-sm text-gray-600 mb-2">
-                      {material.description}
-                    </p>
-                    <div className="flex items-center text-xs text-gray-500">
-                      <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full mr-2">
-                        {classes.find(c => c.id === material.classId)?.name || 'Unknown Class'}
-                      </span>
-                      <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full">
-                        {material.subject}
-                      </span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => handleDelete(material.id, material.title)}
-                    disabled={processingId === material.id}
-                    className="text-gray-400 hover:text-red-600 disabled:opacity-50"
-                  >
-                    {processingId === material.id ? (
-                      <LoadingSpinner size="sm" message="" />
-                    ) : (
-                      <Trash2 className="w-4 h-4" />
-                    )}
-                  </button>
-                </div>
-
-                {/* Files List */}
-                <div className="space-y-2">
-                  {material.files.map((file, fileIndex) => (
-                    <div
-                      key={fileIndex}
-                      className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
-                    >
-                      <div className="flex items-center flex-1 min-w-0">
-                        {getFileIcon(file.name)}
-                        <div className="ml-3 flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">
-                            {file.name}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {formatFileSize(file.size)}
-                          </p>
-                        </div>
+          (Array.isArray(filteredMaterials) ? filteredMaterials : []).map(
+            (material, index) => (
+              <motion.div
+                key={material.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                className="bg-white rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-300"
+              >
+                <div className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-medium text-gray-900 mb-1">
+                        {material.title}
+                      </h3>
+                      <p className="text-sm text-gray-600 mb-2">
+                        {material.description}
+                      </p>
+                      <div className="flex items-center text-xs text-gray-500">
+                        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full mr-2">
+                          {classes.find((c) => c.id === material.classId)
+                            ?.name || "Unknown Class"}
+                        </span>
+                        <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full">
+                          {material.subject}
+                        </span>
                       </div>
-                      <a
-                        href={file.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="ml-2 p-1 text-blue-600 hover:text-blue-800"
-                      >
-                        <Download className="w-4 h-4" />
-                      </a>
                     </div>
-                  ))}
-                </div>
+                    <button
+                      onClick={() => handleDelete(material.id, material.title)}
+                      disabled={processingId === material.id}
+                      className="text-gray-400 hover:text-red-600 disabled:opacity-50"
+                    >
+                      {processingId === material.id ? (
+                        <LoadingSpinner size="sm" message="" />
+                      ) : (
+                        <Trash2 className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
 
-                <div className="mt-4 pt-4 border-t border-gray-200 text-xs text-gray-500">
-                  Uploaded on {new Date(material.uploadedAt).toLocaleDateString()}
+                  {/* Files List */}
+                  <div className="space-y-2">
+                    {material.files.map((file, fileIndex) => (
+                      <div
+                        key={fileIndex}
+                        className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
+                      >
+                        <div className="flex items-center flex-1 min-w-0">
+                          {getFileIcon(file.name)}
+                          <div className="ml-3 flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {file.name}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {formatFileSize(file.size)}
+                            </p>
+                          </div>
+                        </div>
+                        <a
+                          href={file.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="ml-2 p-1 text-blue-600 hover:text-blue-800"
+                        >
+                          <Download className="w-4 h-4" />
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-4 pt-4 border-t border-gray-200 text-xs text-gray-500">
+                    Uploaded on{" "}
+                    {new Date(material.uploadedAt).toLocaleDateString()}
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          ))
+              </motion.div>
+            )
+          )
         )}
       </motion.div>
 
       {/* Upload Modal */}
       <AnimatePresence>
         {showUploadModal && (
-          <motion.div 
+          <motion.div
             className="fixed inset-0 z-50 overflow-y-auto"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -420,7 +446,7 @@ const MaterialsManagement = () => {
           >
             <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
               {/* Backdrop */}
-              <motion.div 
+              <motion.div
                 className="fixed inset-0 bg-gray-500 bg-opacity-75"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -429,7 +455,10 @@ const MaterialsManagement = () => {
               />
 
               {/* Center modal */}
-              <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">
+              <span
+                className="hidden sm:inline-block sm:align-middle sm:h-screen"
+                aria-hidden="true"
+              >
                 &#8203;
               </span>
 
@@ -466,7 +495,12 @@ const MaterialsManagement = () => {
                             type="text"
                             required
                             value={uploadForm.title}
-                            onChange={(e) => setUploadForm({ ...uploadForm, title: e.target.value })}
+                            onChange={(e) =>
+                              setUploadForm({
+                                ...uploadForm,
+                                title: e.target.value,
+                              })
+                            }
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="e.g., Chapter 5 - Quantum Physics"
                           />
@@ -476,13 +510,25 @@ const MaterialsManagement = () => {
                           <label className="block text-sm font-medium text-gray-700 mb-1">
                             Subject
                           </label>
-                          <input
-                            type="text"
+                          <select
                             value={uploadForm.subject}
-                            onChange={(e) => setUploadForm({ ...uploadForm, subject: e.target.value })}
+                            onChange={(e) =>
+                              setUploadForm({
+                                ...uploadForm,
+                                subject: e.target.value,
+                              })
+                            }
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="e.g., Physics, Mathematics"
-                          />
+                          >
+                            <option value="">Select a subject</option>
+                            {(teacherProfile?.profile?.teachingSubjects || []).map(
+                              (subject, index) => (
+                                <option key={subject} value={subject}>
+                                  {subject}
+                                </option>
+                              )
+                            )}
+                          </select>
                         </div>
                       </div>
 
@@ -493,15 +539,22 @@ const MaterialsManagement = () => {
                         <select
                           required
                           value={uploadForm.classId}
-                          onChange={(e) => setUploadForm({ ...uploadForm, classId: e.target.value })}
+                          onChange={(e) =>
+                            setUploadForm({
+                              ...uploadForm,
+                              classId: e.target.value,
+                            })
+                          }
                           className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         >
                           <option value="">Select a class</option>
-                          {classes.map(cls => (
-                            <option key={cls.id} value={cls.id}>
-                              {cls.name} ({cls.subject})
-                            </option>
-                          ))}
+                          {(teacherProfile?.profile?.teachingGrades || []).map(
+                            (grade, index) => (
+                              <option key={grade || index} value={grade}>
+                                {grade}
+                              </option>
+                            )
+                          )}
                         </select>
                       </div>
 
@@ -511,7 +564,12 @@ const MaterialsManagement = () => {
                         </label>
                         <textarea
                           value={uploadForm.description}
-                          onChange={(e) => setUploadForm({ ...uploadForm, description: e.target.value })}
+                          onChange={(e) =>
+                            setUploadForm({
+                              ...uploadForm,
+                              description: e.target.value,
+                            })
+                          }
                           rows={3}
                           className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           placeholder="Brief description of the material..."
@@ -595,7 +653,7 @@ const MaterialsManagement = () => {
                           <span className="ml-2">Uploading...</span>
                         </>
                       ) : (
-                        'Upload Materials'
+                        "Upload Materials"
                       )}
                     </button>
                     <button
