@@ -264,13 +264,21 @@ const AdminOverview = () => {
                         </Pie>
                         <Tooltip
                           contentStyle={{
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            border: 'none',
+                            backgroundColor: 'white',
+                            border: '1px solid #e5e7eb',
                             borderRadius: '12px',
-                            color: 'white',
+                            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.15)',
+                            color: '#374151',
                             fontSize: '14px',
-                            fontWeight: '500'
+                            fontWeight: '600',
+                            padding: '12px 16px'
                           }}
+                          labelStyle={{
+                            color: '#111827',
+                            fontWeight: '700',
+                            marginBottom: '4px'
+                          }}
+                          cursor={{ fill: 'transparent' }}
                         />
                       </PieChart>
                     </ResponsiveContainer>
