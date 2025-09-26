@@ -326,6 +326,13 @@ router.get('/materials', authenticateToken, requireRole(['student']), requireApp
     const studentId = req.user._id;
     const { classId, subject, page = 1, limit = 10 } = req.query;
 
+    // Get student profile to find their grade
+    const student = await User.findById(studentId);
+    if (!student || !student.profile || !student.profile.grade) {
+      return res.status(400).json({ error: 'Student grade not found' });
+    }
+    const studentGrade = student.profile.grade;
+
     // Get classes where student is enrolled
     const classFilter = { students: studentId };
     if (classId) {
@@ -335,11 +342,21 @@ router.get('/materials', authenticateToken, requireRole(['student']), requireApp
     const classes = await Class.find(classFilter);
     const classIds = classes.map(cls => cls._id);
 
-    // Build study materials filter
-    const filter = { class: { $in: classIds } };
+    // Build study materials filter - include both class-based and grade-based materials
+    const filter = {
+      $or: [
+        { class: { $in: classIds } }, // Materials for enrolled classes
+        { grade: studentGrade }        // Materials for student's grade
+      ]
+    };
+
     if (subject) {
       filter.subject = subject;
     }
+
+    console.log('Student materials filter:', JSON.stringify(filter, null, 2));
+    console.log('Student grade:', studentGrade);
+    console.log('Class IDs:', classIds);
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
@@ -349,6 +366,8 @@ router.get('/materials', authenticateToken, requireRole(['student']), requireApp
       .sort({ uploadedAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
+
+    console.log('Found materials:', studyMaterials.length);
 
     const total = await StudyMaterial.countDocuments(filter);
 

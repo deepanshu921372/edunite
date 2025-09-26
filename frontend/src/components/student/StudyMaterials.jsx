@@ -264,7 +264,7 @@ const StudyMaterials = () => {
         ) : (
           filteredMaterials.map((material, index) => (
             <motion.div
-              key={material.id}
+              key={material._id || material.id || index}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
@@ -336,18 +336,6 @@ const StudyMaterials = () => {
                               <ExternalLink className="w-4 h-4" />
                             </a>
                           )}
-                          <button
-                            onClick={() => handleDownload(material.id, file.name)}
-                            disabled={downloading === material.id}
-                            className="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                            title="Download file"
-                          >
-                            {downloading === material.id ? (
-                              <LoadingSpinner size="sm" message="" />
-                            ) : (
-                              <Download className="w-4 h-4" />
-                            )}
-                          </button>
                         </div>
                       </div>
                     ))
@@ -376,47 +364,6 @@ const StudyMaterials = () => {
         )}
       </motion.div>
 
-      {/* Quick Subject Filter Buttons */}
-      {filteredMaterials.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="bg-white p-4 rounded-lg shadow-sm border border-gray-200"
-        >
-          <h4 className="text-sm font-medium text-gray-700 mb-3">Quick Filter by Subject</h4>
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => setSelectedSubject('all')}
-              className={`px-3 py-1 text-xs font-medium rounded-full border transition-colors duration-200 ${
-                selectedSubject === 'all'
-                  ? 'bg-blue-100 text-blue-800 border-blue-200'
-                  : 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200'
-              }`}
-            >
-              All ({materials.length})
-            </button>
-            {subjects.map(subject => {
-              const count = materials.filter(m => m.subject === subject).length;
-              if (count === 0) return null;
-
-              return (
-                <button
-                  key={subject}
-                  onClick={() => setSelectedSubject(subject)}
-                  className={`px-3 py-1 text-xs font-medium rounded-full border transition-colors duration-200 ${
-                    selectedSubject === subject
-                      ? 'bg-blue-100 text-blue-800 border-blue-200'
-                      : 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200'
-                  }`}
-                >
-                  {subject} ({count})
-                </button>
-              );
-            })}
-          </div>
-        </motion.div>
-      )}
     </div>
   );
 };
