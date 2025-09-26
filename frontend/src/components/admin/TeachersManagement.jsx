@@ -2,17 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   Search,
-  Filter,
-  Edit3,
   Trash2,
   User,
-  Mail,
   Calendar,
   Users,
   AlertTriangle,
   BookOpen,
-  Phone,
-  MapPin
+  Phone
 } from 'lucide-react';
 import { adminAPI } from '../../services/api';
 import LoadingSpinner from '../shared/LoadingSpinner';
@@ -46,7 +42,6 @@ const TeachersManagement = () => {
     try {
       const response = await adminAPI.getAllUsers();
       const teachersData = response.data?.filter(user => user.role === 'teacher') || [];
-      console.log('Fetched teachers data:', teachersData); // Debug log
       setTeachers(teachersData);
       setTeachersLoaded(true);
     } catch (error) {

@@ -86,9 +86,6 @@ const TimetableManagement = () => {
       setTimetable(timetableData);
       setClasses(classesData);
       setTeacherProfile(profileData);
-
-      console.log('Classes:', classesData);
-      console.log('Profile:', profileData);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast.error("Failed to load timetable data");

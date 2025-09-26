@@ -2,18 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   Search,
-  Filter,
-  Edit3,
   Trash2,
   User,
-  Mail,
   Calendar,
   GraduationCap,
   AlertTriangle,
   BookOpen,
   Phone,
-  MapPin,
-  Users
+  MapPin
 } from 'lucide-react';
 import { adminAPI } from '../../services/api';
 import LoadingSpinner from '../shared/LoadingSpinner';

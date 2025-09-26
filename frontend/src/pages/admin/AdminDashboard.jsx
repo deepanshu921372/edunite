@@ -1,12 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import {
-  BarChart3,
   Users,
   UserCheck,
   GraduationCap,
-  Home,
-  Settings
+  Home
 } from 'lucide-react';
 import DashboardLayout from '../../components/shared/DashboardLayout';
 
