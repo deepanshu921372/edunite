@@ -243,7 +243,13 @@ const TeacherProfile = () => {
               className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 cursor-pointer"
             >
               {loading ? (
-                <LoadingSpinner size="sm" message="" />
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Saving...
+                </>
               ) : (
                 <>
                   <Save className="w-4 h-4 mr-2" />
@@ -262,36 +268,33 @@ const TeacherProfile = () => {
         className="bg-white shadow-lg rounded-xl overflow-hidden border border-gray-100"
       >
         <form onSubmit={handleSubmit}>
-          <div className="bg-gradient-to-br from-green-500 via-blue-500 to-purple-600 px-6 py-10 relative overflow-hidden">
-            <div className="absolute inset-0 bg-black opacity-10"></div>
-            <div className="relative text-white">
-              <h3 className="text-3xl font-bold mb-2">{profileData.displayName}</h3>
-              <p className="text-green-100 mb-4 opacity-90">{profileData.email}</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-10 border border-gray-200 rounded-t-xl">
+            <div className="text-gray-900">
+              <h3 className="text-3xl font-bold mb-2 text-gray-800">{profileData.displayName}</h3>
+              <p className="text-gray-600 mb-6">{profileData.email}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="flex items-center">
-                  <div className="bg-white bg-opacity-20 p-2 rounded-lg mr-3">
-                    <GraduationCap className="w-5 h-5" />
+                  <div className="bg-blue-500 p-3 rounded-xl mr-4 flex items-center justify-center shadow-sm">
+                    <GraduationCap className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <p className="text-xs opacity-75 uppercase tracking-wide">Specialization</p>
-                    <p className="font-medium">
+                    <p className="text-xs text-gray-500 uppercase tracking-wide font-medium mb-1">Specialization</p>
+                    <p className="font-semibold text-lg text-gray-800">
                       {profileData.specialization || 'Not set'}
                     </p>
                   </div>
                 </div>
-                {profileData.experience && (
-                  <div className="flex items-center">
-                    <div className="bg-white bg-opacity-20 p-2 rounded-lg mr-3">
-                      <Clock className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <p className="text-xs opacity-75 uppercase tracking-wide">Experience</p>
-                      <p className="font-medium">
-                        {profileData.experience} years
-                      </p>
-                    </div>
+                <div className="flex items-center">
+                  <div className="bg-green-500 p-3 rounded-xl mr-4 flex items-center justify-center shadow-sm">
+                    <Clock className="w-6 h-6 text-white" />
                   </div>
-                )}
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase tracking-wide font-medium mb-1">Experience</p>
+                    <p className="font-semibold text-lg text-gray-800">
+                      {profileData.experience ? `${profileData.experience} years` : 'Not set'}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
