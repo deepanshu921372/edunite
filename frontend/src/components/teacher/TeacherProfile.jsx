@@ -213,7 +213,7 @@ const TeacherProfile = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">My Profile</h2>
           <p className="mt-2 text-gray-600">
@@ -223,16 +223,16 @@ const TeacherProfile = () => {
         {!editing ? (
           <button
             onClick={() => setEditing(true)}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 cursor-pointer"
           >
             <Edit3 className="w-4 h-4 mr-2" />
             Edit Profile
           </button>
         ) : (
-          <div className="flex space-x-2">
+          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
             <button
               onClick={handleCancel}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 cursor-pointer"
             >
               <X className="w-4 h-4 mr-2" />
               Cancel
@@ -240,7 +240,7 @@ const TeacherProfile = () => {
             <button
               onClick={handleSubmit}
               disabled={loading}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+              className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 cursor-pointer"
             >
               {loading ? (
                 <LoadingSpinner size="sm" message="" />
@@ -259,27 +259,40 @@ const TeacherProfile = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="bg-white shadow-md rounded-lg overflow-hidden"
+        className="bg-white shadow-lg rounded-xl overflow-hidden border border-gray-100"
       >
         <form onSubmit={handleSubmit}>
-          <div className="bg-gradient-to-r from-green-500 to-blue-600 px-6 py-8">
-            <div className="text-white">
-              <h3 className="text-2xl font-bold">{profileData.displayName}</h3>
-              <p className="text-green-100 mt-1">{profileData.email}</p>
-              <div className="flex items-center mt-3">
-                <GraduationCap className="w-4 h-4 mr-2" />
-                <span className="text-green-200">
-                  {profileData.specialization || 'Specialization not set'}
-                </span>
-              </div>
-              {profileData.experience && (
-                <div className="flex items-center mt-2">
-                  <Clock className="w-4 h-4 mr-2" />
-                  <span className="text-green-200">
-                    {profileData.experience} years experience
-                  </span>
+          <div className="bg-gradient-to-br from-green-500 via-blue-500 to-purple-600 px-6 py-10 relative overflow-hidden">
+            <div className="absolute inset-0 bg-black opacity-10"></div>
+            <div className="relative text-white">
+              <h3 className="text-3xl font-bold mb-2">{profileData.displayName}</h3>
+              <p className="text-green-100 mb-4 opacity-90">{profileData.email}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex items-center">
+                  <div className="bg-white bg-opacity-20 p-2 rounded-lg mr-3">
+                    <GraduationCap className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs opacity-75 uppercase tracking-wide">Specialization</p>
+                    <p className="font-medium">
+                      {profileData.specialization || 'Not set'}
+                    </p>
+                  </div>
                 </div>
-              )}
+                {profileData.experience && (
+                  <div className="flex items-center">
+                    <div className="bg-white bg-opacity-20 p-2 rounded-lg mr-3">
+                      <Clock className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs opacity-75 uppercase tracking-wide">Experience</p>
+                      <p className="font-medium">
+                        {profileData.experience} years
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -288,7 +301,7 @@ const TeacherProfile = () => {
               {/* Personal Information */}
               <div>
                 <h4 className="text-lg font-medium text-gray-900 mb-4">Personal Information</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Full Name *
@@ -299,7 +312,7 @@ const TeacherProfile = () => {
                         required
                         value={profileData.displayName}
                         onChange={(e) => handleInputChange('displayName', e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400 transition-colors duration-200 cursor-text"
                       />
                     ) : (
                       <div className="flex items-center p-3 bg-gray-50 rounded-lg">
@@ -360,7 +373,7 @@ const TeacherProfile = () => {
                     )}
                   </div>
 
-                  <div className="md:col-span-2">
+                  <div className="lg:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Address
                     </label>
@@ -385,7 +398,7 @@ const TeacherProfile = () => {
               {/* Professional Information */}
               <div>
                 <h4 className="text-lg font-medium text-gray-900 mb-4">Professional Information</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Qualifications
@@ -434,7 +447,7 @@ const TeacherProfile = () => {
                       <select
                         value={profileData.specialization}
                         onChange={(e) => handleInputChange('specialization', e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400 transition-colors duration-200 cursor-pointer"
                       >
                         <option value="">Select Specialization</option>
                         {specializationOptions.map(spec => (
@@ -482,16 +495,16 @@ const TeacherProfile = () => {
                     Grades I Can Teach (Multiple Selection)
                   </label>
                   {editing ? (
-                    <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                       {gradeOptions.map(grade => (
-                        <label key={grade} className="flex items-center">
+                        <label key={grade} className="flex items-center p-2 rounded-lg hover:bg-blue-50 transition-colors duration-200 cursor-pointer group">
                           <input
                             type="checkbox"
                             checked={profileData.teachingGrades.includes(grade)}
                             onChange={() => handleMultiSelectChange('teachingGrades', grade)}
-                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                           />
-                          <span className="ml-2 text-sm text-gray-700">{grade}</span>
+                          <span className="ml-2 text-sm text-gray-700 group-hover:text-blue-700 transition-colors duration-200">{grade}</span>
                         </label>
                       ))}
                     </div>
@@ -514,16 +527,16 @@ const TeacherProfile = () => {
                     Subjects I Can Teach (Multiple Selection)
                   </label>
                   {editing ? (
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                       {subjectOptions.map(subject => (
-                        <label key={subject} className="flex items-center">
+                        <label key={subject} className="flex items-center p-2 rounded-lg hover:bg-green-50 transition-colors duration-200 cursor-pointer group">
                           <input
                             type="checkbox"
                             checked={profileData.teachingSubjects.includes(subject)}
                             onChange={() => handleMultiSelectChange('teachingSubjects', subject)}
-                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            className="rounded border-gray-300 text-green-600 focus:ring-green-500 cursor-pointer"
                           />
-                          <span className="ml-2 text-sm text-gray-700">{subject}</span>
+                          <span className="ml-2 text-sm text-gray-700 group-hover:text-green-700 transition-colors duration-200">{subject}</span>
                         </label>
                       ))}
                     </div>
@@ -544,7 +557,7 @@ const TeacherProfile = () => {
               {/* Emergency Contact */}
               <div>
                 <h4 className="text-lg font-medium text-gray-900 mb-4">Emergency Contact</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Contact Name
@@ -591,7 +604,7 @@ const TeacherProfile = () => {
                       <select
                         value={profileData.emergencyContactRelation}
                         onChange={(e) => handleInputChange('emergencyContactRelation', e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-gray-400 transition-colors duration-200 cursor-pointer"
                       >
                         <option value="">Select Relationship</option>
                         {relationshipOptions.map(relation => (

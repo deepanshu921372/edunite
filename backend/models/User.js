@@ -39,26 +39,26 @@ const userSchema = new mongoose.Schema({
     phoneNumber: String,
     address: String,
     dateOfBirth: Date,
-    // Student-specific fields
+
     parentName: String,
     parentPhoneNumber: String,
-    grade: String, // e.g., "Nursery", "LKG", "UKG", "1st", "2nd", ..., "12th"
-    stream: String, // For 11th and 12th: "Science", "Commerce", "Arts"
+    grade: String, 
+    stream: String, 
     schoolName: String,
     previousTuitionExperience: String,
-    // Teacher-specific fields
+    
     qualifications: String,
-    experience: String, // Years of teaching experience
-    specialization: String, // e.g., "Mathematics", "Science"
-    teachingGrades: [String], // Grades they can teach: ["9th", "10th", "11th", "12th"]
-    teachingSubjects: [String], // Subjects they can teach
+    experience: String, 
+    specialization: String, 
+    teachingGrades: [String], 
+    teachingSubjects: [String], 
     joinedDate: Date,
     emergencyContactName: String,
     emergencyContactPhone: String,
     emergencyContactRelation: String
   },
-  admissionNumber: String, // Instead of rollNumber - more appropriate for tuition
-  subjects: [String], // Array of subjects student is enrolled for
+  admissionNumber: String, 
+  subjects: [String],
   emergencyContact: {
     name: String,
     phone: String,
