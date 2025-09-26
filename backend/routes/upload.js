@@ -93,7 +93,20 @@ router.post('/study-material', authenticateToken, requireRole(['teacher']), requ
     }
 
     const folder = getCloudinaryFolder('study-material', req.user.role);
-    const result = await uploadToCloudinary(req.file.buffer, folder);
+
+    // Set resource type for different file types
+    const isPDF = req.file.mimetype === 'application/pdf';
+    const isDocument = req.file.mimetype.includes('document') ||
+                      req.file.mimetype.includes('word') ||
+                      req.file.mimetype.includes('powerpoint') ||
+                      req.file.mimetype.includes('spreadsheet');
+
+    const uploadOptions = {};
+    if (isPDF || isDocument) {
+      uploadOptions.resourceType = 'raw';
+    }
+
+    const result = await uploadToCloudinary(req.file.buffer, folder, uploadOptions);
 
     res.json({
       success: true,

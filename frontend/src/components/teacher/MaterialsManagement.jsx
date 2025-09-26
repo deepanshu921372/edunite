@@ -403,11 +403,11 @@ const MaterialsManagement = () => {
                       </div>
                     </div>
                     <button
-                      onClick={() => handleDelete(material.id, material.title)}
-                      disabled={processingId === material.id}
+                      onClick={() => handleDelete(material._id || material.id, material.title)}
+                      disabled={processingId === (material._id || material.id)}
                       className="text-gray-400 hover:text-red-600 disabled:opacity-50"
                     >
-                      {processingId === material.id ? (
+                      {processingId === (material._id || material.id) ? (
                         <LoadingSpinner size="sm" message="" />
                       ) : (
                         <Trash2 className="w-4 h-4" />

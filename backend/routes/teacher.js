@@ -673,6 +673,8 @@ router.delete('/materials/:materialId', authenticateToken, requireRole(['teacher
     const teacherId = req.user._id;
     const { materialId } = req.params;
 
+    console.log('Deleting material:', materialId, 'for teacher:', teacherId);
+
     const studyMaterial = await StudyMaterial.findOne({
       _id: materialId,
       teacher: teacherId
@@ -682,6 +684,42 @@ router.delete('/materials/:materialId', authenticateToken, requireRole(['teacher
       return res.status(404).json({ error: 'Study material not found or not authorized' });
     }
 
+    console.log('Found material:', studyMaterial);
+
+    // Delete files from Cloudinary
+    const cloudinary = require('cloudinary').v2;
+    const filesToDelete = [];
+
+    // Handle multiple files format
+    if (studyMaterial.files && studyMaterial.files.length > 0) {
+      studyMaterial.files.forEach(file => {
+        if (file.url) {
+          const publicId = extractPublicIdFromUrl(file.url);
+          if (publicId) filesToDelete.push(publicId);
+        }
+      });
+    }
+
+    // Handle single file format (backward compatibility)
+    if (studyMaterial.fileUrl) {
+      const publicId = extractPublicIdFromUrl(studyMaterial.fileUrl);
+      if (publicId) filesToDelete.push(publicId);
+    }
+
+    console.log('Files to delete from Cloudinary:', filesToDelete);
+
+    // Delete files from Cloudinary
+    for (const publicId of filesToDelete) {
+      try {
+        await cloudinary.uploader.destroy(publicId, { resource_type: 'raw' });
+        console.log('Deleted from Cloudinary:', publicId);
+      } catch (cloudinaryError) {
+        console.error('Error deleting from Cloudinary:', publicId, cloudinaryError);
+        // Continue even if Cloudinary deletion fails
+      }
+    }
+
+    // Delete from database
     await StudyMaterial.findByIdAndDelete(materialId);
 
     res.json({ message: 'Study material deleted successfully' });
@@ -690,6 +728,21 @@ router.delete('/materials/:materialId', authenticateToken, requireRole(['teacher
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+// Helper function to extract public ID from Cloudinary URL
+function extractPublicIdFromUrl(url) {
+  try {
+    // Extract public ID from URLs like:
+    // https://res.cloudinary.com/cloud/image/upload/v123/folder/file.pdf
+    // https://res.cloudinary.com/cloud/raw/upload/v123/folder/file.pdf
+    const regex = /\/(?:image|raw)\/upload\/(?:v\d+\/)?(.+)/;
+    const match = url.match(regex);
+    return match ? match[1] : null;
+  } catch (error) {
+    console.error('Error extracting public ID:', error);
+    return null;
+  }
+}
 
 // Get class-wise attendance summary
 router.get('/attendance-summary/:classId', authenticateToken, requireRole(['teacher']), requireApproval, async (req, res) => {
