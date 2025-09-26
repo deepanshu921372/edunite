@@ -222,7 +222,6 @@ router.post('/change-password', authenticateToken, requireApproval, async (req, 
     const user = req.user;
 
     // Log the password change attempt
-    console.log(`Password change requested for user: ${user.email}`);
 
     res.json({
       message: 'Password change request processed. Please complete the process through Firebase Auth.'

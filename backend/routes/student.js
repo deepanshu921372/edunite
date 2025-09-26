@@ -437,7 +437,6 @@ router.get('/materials/:materialId/download', authenticateToken, requireRole(['s
     }
 
     // Log download (optional - for analytics)
-    console.log(`Student ${req.user.name} downloaded: ${studyMaterial.title}`);
 
     res.json({
       studyMaterial: {
@@ -482,7 +481,6 @@ router.get('/study-materials/:materialId/download', authenticateToken, requireRo
     }
 
     // Log download (optional - for analytics)
-    console.log(`Student ${req.user.name} downloaded: ${studyMaterial.title}`);
 
     res.json({
       studyMaterial: {

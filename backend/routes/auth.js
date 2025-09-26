@@ -48,7 +48,6 @@ router.post('/signup', async (req, res) => {
     await user.save();
 
     // Send notification to admin (you can customize this)
-    console.log(`New user registration request: ${user.name} (${user.email})`);
 
     res.status(201).json({
       user,
@@ -161,7 +160,6 @@ router.post('/login', async (req, res) => {
             }
           });
           await newRequest.save();
-          console.log(`Re-submission request created for ${user.name}`);
         }
 
         const userForStorage = {
@@ -222,7 +220,6 @@ router.post('/login', async (req, res) => {
 
         await user.save();
 
-        console.log(`New user registration: ${user.name} (${user.email}) - Role: ${user.role}, Auto-approved: ${user.isApproved}`);
 
         // Create a user request for non-admin users
         if (!user.isApproved) {
@@ -236,7 +233,6 @@ router.post('/login', async (req, res) => {
             }
           });
           await userRequest.save();
-          console.log(`User request created for ${user.name}`);
         }
 
         const userForStorage = {
@@ -444,7 +440,6 @@ const sendApprovalEmail = async (user) => {
     };
 
     await transporter.sendMail(mailOptions);
-    console.log(`Approval email sent to ${user.email}`);
   } catch (error) {
     console.error('Error sending approval email:', error);
   }

@@ -16,7 +16,7 @@ import TeacherDashboard from './pages/teacher/TeacherDashboard';
 import StudentDashboard from './pages/student/StudentDashboard';
 
 const AppRoutes = () => {
-  const { currentUser, userProfile, loading } = useAuth();
+  const { userProfile, loading } = useAuth();
 
   if (loading) {
     return <LoadingSpinner size="xl" message="Loading Edunite..." />;

@@ -29,7 +29,6 @@ const sendApprovalEmail = async (user) => {
     };
 
     await transporter.sendMail(mailOptions);
-    console.log(`Approval email sent to ${user.email}`);
   } catch (error) {
     console.error('Error sending approval email:', error);
   }
@@ -62,7 +61,6 @@ const sendRejectionEmail = async (user, adminNotes = '') => {
     };
 
     await transporter.sendMail(mailOptions);
-    console.log(`Rejection email sent to ${user.email}`);
   } catch (error) {
     console.error('Error sending rejection email:', error);
   }

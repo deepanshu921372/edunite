@@ -1,5 +1,4 @@
 const admin = require('firebase-admin');
-const path = require('path');
 
 // Initialize Firebase Admin SDK
 const initializeFirebase = () => {
@@ -18,7 +17,6 @@ const initializeFirebase = () => {
         })
       });
       
-      console.log('Firebase Admin initialized successfully');
     }
   } catch (error) {
     console.error('Error initializing Firebase Admin:', error);

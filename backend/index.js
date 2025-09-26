@@ -36,7 +36,7 @@ mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
-.then(() => console.log('Connected to MongoDB'))
+.then(() => {})
 .catch((err) => console.error('MongoDB connection error:', err));
 
 const PORT = process.env.PORT || 3006;
@@ -44,7 +44,6 @@ const PORT = process.env.PORT || 3006;
 // For local development
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
   });
 }
 
