@@ -23,6 +23,8 @@ const TimetableManagement = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingEntry, setEditingEntry] = useState(null);
   const [currentWeek, setCurrentWeek] = useState(new Date());
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [viewMode, setViewMode] = useState('month'); // 'week' or 'month'
   const [processingId, setProcessingId] = useState(null);
   const [formData, setFormData] = useState({
     grade: "",
@@ -241,6 +243,35 @@ const TimetableManagement = () => {
     return week;
   };
 
+  const getMonthDates = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+
+    // First day of the month
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+
+    // Get the first Sunday of the calendar (might be from previous month)
+    const startDate = new Date(firstDay);
+    const startDayOfWeek = firstDay.getDay();
+    startDate.setDate(firstDay.getDate() - startDayOfWeek);
+
+    // Generate 42 days (6 weeks)
+    const dates = [];
+    for (let i = 0; i < 42; i++) {
+      const currentDate = new Date(startDate);
+      currentDate.setDate(startDate.getDate() + i);
+      dates.push(currentDate);
+    }
+
+    return { dates, firstDay, lastDay };
+  };
+
+  const getClassesForDate = (date) => {
+    const dayName = daysOfWeek[date.getDay()];
+    return getClassesForDay(dayName);
+  };
+
   const formatTime = (time) => {
     return new Date(`1970-01-01T${time}`).toLocaleTimeString([], {
       hour: "2-digit",
@@ -290,6 +321,7 @@ const TimetableManagement = () => {
                 startTime: timeSlot.startTime,
                 endTime: timeSlot.endTime,
                 subject: timeSlot.subject,
+                grade: timetableEntry.grade,
                 location: timetableEntry.location || ''
               });
             });
@@ -321,157 +353,343 @@ const TimetableManagement = () => {
         <button
           onClick={handleOpenModal}
           type="button"
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 cursor-pointer"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Class
         </button>
       </div>
 
-      {/* Week Navigation */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => {
-              const prevWeek = new Date(currentWeek);
-              prevWeek.setDate(currentWeek.getDate() - 7);
-              setCurrentWeek(prevWeek);
-            }}
-            className="flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-          >
-            <ChevronLeft className="w-4 h-4 mr-1" />
-            Previous Week
-          </button>
+      {/* Navigation and View Toggle */}
+      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          {/* View Toggle */}
+          <div className="flex bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setViewMode('month')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer ${
+                viewMode === 'month'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Month View
+            </button>
+            <button
+              onClick={() => setViewMode('week')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer ${
+                viewMode === 'week'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Week View
+            </button>
+          </div>
 
-          <h3 className="text-lg font-medium text-gray-900">
-            Week of {weekDates[0].toLocaleDateString()} -{" "}
-            {weekDates[6].toLocaleDateString()}
+          {/* Month/Week Title */}
+          <h3 className="text-lg font-semibold text-gray-900 text-center">
+            {viewMode === 'month'
+              ? currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+              : `Week of ${weekDates[0].toLocaleDateString()} - ${weekDates[6].toLocaleDateString()}`
+            }
           </h3>
 
-          <button
-            onClick={() => {
-              const nextWeek = new Date(currentWeek);
-              nextWeek.setDate(currentWeek.getDate() + 7);
-              setCurrentWeek(nextWeek);
-            }}
-            className="flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-          >
-            Next Week
-            <ChevronRight className="w-4 h-4 ml-1" />
-          </button>
+          {/* Navigation Buttons */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                if (viewMode === 'month') {
+                  const prevMonth = new Date(currentMonth);
+                  prevMonth.setMonth(currentMonth.getMonth() - 1);
+                  setCurrentMonth(prevMonth);
+                } else {
+                  const prevWeek = new Date(currentWeek);
+                  prevWeek.setDate(currentWeek.getDate() - 7);
+                  setCurrentWeek(prevWeek);
+                }
+              }}
+              className="flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 transition-colors duration-200 cursor-pointer"
+            >
+              <ChevronLeft className="w-4 h-4 mr-1" />
+              Previous
+            </button>
+
+            <button
+              onClick={() => {
+                if (viewMode === 'month') {
+                  setCurrentMonth(new Date());
+                } else {
+                  setCurrentWeek(new Date());
+                }
+              }}
+              className="px-3 py-2 border border-blue-300 rounded-lg text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors duration-200 cursor-pointer"
+            >
+              Today
+            </button>
+
+            <button
+              onClick={() => {
+                if (viewMode === 'month') {
+                  const nextMonth = new Date(currentMonth);
+                  nextMonth.setMonth(currentMonth.getMonth() + 1);
+                  setCurrentMonth(nextMonth);
+                } else {
+                  const nextWeek = new Date(currentWeek);
+                  nextWeek.setDate(currentWeek.getDate() + 7);
+                  setCurrentWeek(nextWeek);
+                }
+              }}
+              className="flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 transition-colors duration-200 cursor-pointer"
+            >
+              Next
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Weekly Timetable Grid */}
+      {/* Calendar Grid */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="bg-white rounded-lg shadow-md overflow-hidden"
+        className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100"
       >
-        <div className="grid grid-cols-1 md:grid-cols-7 divide-y md:divide-y-0 md:divide-x divide-gray-200">
-          {daysOfWeek.map((day, dayIndex) => (
-            <div key={day} className="p-4">
-              <div className="text-center mb-4">
-                <h3 className="font-medium text-gray-900">{day}</h3>
-                <p className="text-sm text-gray-500">
-                  {weekDates[dayIndex].toLocaleDateString([], {
-                    day: "numeric",
-                    month: "short",
-                  })}
-                </p>
+        {viewMode === 'month' ? (
+          /* Month Calendar View */
+          <>
+            {/* Month Header */}
+            <div className="bg-gray-50 border-b border-gray-200">
+              <div className="grid grid-cols-7 divide-x divide-gray-200">
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                  <div key={day} className="py-3 text-center">
+                    <span className="text-sm font-semibold text-gray-700">{day}</span>
+                  </div>
+                ))}
               </div>
+            </div>
 
-              <div className="space-y-2">
-                {getClassesForDay(day).map((entry, index) => {
-                  const classDate = weekDates[dayIndex];
-                  const classOver = isClassOver(day, entry.endTime, classDate);
-                  return (
-                    <motion.div
-                      key={entry.id}
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.3, delay: index * 0.1 }}
-                      className={`${
-                        classOver
-                          ? "bg-gray-50 border-l-4 border-gray-400"
-                          : "bg-blue-50 border-l-4 border-blue-400"
-                      } p-3 rounded-r-lg hover:${
-                        classOver ? "bg-gray-100" : "bg-blue-100"
-                      } transition-colors duration-200 group relative`}
-                    >
-                      {/* Class Over Overlay */}
-                      {classOver && (
-                        <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-medium">
-                          Class Over
+            {/* Month Calendar Grid */}
+            <div className="grid grid-cols-7 divide-x divide-gray-200">
+              {getMonthDates(currentMonth).dates.map((date, dateIndex) => {
+                const isCurrentMonth = date.getMonth() === currentMonth.getMonth();
+                const isToday = date.toDateString() === new Date().toDateString();
+                const classesForDate = getClassesForDate(date);
+
+                return (
+                  <div
+                    key={dateIndex}
+                    className={`min-h-[120px] p-2 border-b border-gray-200 ${
+                      !isCurrentMonth ? 'bg-gray-50' : 'bg-white'
+                    } hover:bg-blue-50 transition-colors duration-200 cursor-pointer`}
+                  >
+                    {/* Date Number */}
+                    <div className="flex justify-between items-center mb-1">
+                      <span
+                        className={`text-sm font-medium ${
+                          isToday
+                            ? 'bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center'
+                            : isCurrentMonth
+                            ? 'text-gray-900'
+                            : 'text-gray-400'
+                        }`}
+                      >
+                        {date.getDate()}
+                      </span>
+                    </div>
+
+                    {/* Classes for this date */}
+                    <div className="space-y-1">
+                      {classesForDate.slice(0, 3).map((classEntry, classIndex) => {
+                        const classInfo = classes.find((c) => c._id === classEntry.class || c.id === classEntry.class);
+                        const classOver = isClassOver(daysOfWeek[date.getDay()], classEntry.endTime, date);
+
+                        return (
+                          <motion.div
+                            key={classEntry.id}
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: classIndex * 0.1 }}
+                            className={`group relative text-xs p-2 rounded-md cursor-pointer transition-all duration-200 ${
+                              classOver
+                                ? 'bg-gray-100 border border-gray-300 text-gray-600'
+                                : 'bg-blue-100 border border-blue-300 text-blue-800 hover:bg-blue-200'
+                            }`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEdit(classEntry);
+                            }}
+                          >
+                            {classOver && (
+                              <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1 rounded-full">
+                                ✓
+                              </div>
+                            )}
+                            <div className="font-medium truncate">
+                              {(() => {
+                                const classInfo = classes.find((c) => c._id === classEntry.class || c.id === classEntry.class);
+                                const subject = classInfo?.subject || classEntry.subject || "Unknown";
+                                const grade = classInfo?.grade || classEntry.grade;
+
+                                if (grade) {
+                                  return `${subject} - ${grade}`;
+                                } else {
+                                  return subject;
+                                }
+                              })()}
+                            </div>
+                            <div className="text-xs opacity-75">
+                              {formatTime(classEntry.startTime)}
+                            </div>
+
+                            {/* Edit/Delete buttons on hover */}
+                            <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEdit(classEntry);
+                                }}
+                                className="p-1 rounded-full bg-white shadow-sm hover:bg-gray-100 cursor-pointer"
+                              >
+                                <Edit3 className="w-3 h-3 text-gray-600" />
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDelete(classEntry.id);
+                                }}
+                                className="p-1 rounded-full bg-white shadow-sm hover:bg-red-100 cursor-pointer"
+                                disabled={processingId === classEntry.id}
+                              >
+                                {processingId === classEntry.id ? (
+                                  <div className="w-3 h-3 border border-red-400 border-t-transparent rounded-full animate-spin"></div>
+                                ) : (
+                                  <Trash2 className="w-3 h-3 text-red-600" />
+                                )}
+                              </button>
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+
+                      {classesForDate.length > 3 && (
+                        <div className="text-xs text-gray-500 font-medium text-center py-1">
+                          +{classesForDate.length - 3} more
                         </div>
                       )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        ) : (
+          /* Week View (Original) */
+          <div className="grid grid-cols-1 md:grid-cols-7 divide-y md:divide-y-0 md:divide-x divide-gray-200">
+            {daysOfWeek.map((day, dayIndex) => (
+              <div key={day} className="p-4">
+                <div className="text-center mb-4">
+                  <h3 className="font-semibold text-gray-900">{day}</h3>
+                  <p className="text-sm text-gray-500">
+                    {weekDates[dayIndex].toLocaleDateString([], {
+                      day: "numeric",
+                      month: "short",
+                    })}
+                  </p>
+                </div>
 
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 min-w-0 pr-16">
-                          <h4 className={`text-sm font-medium truncate ${
-                            classOver ? "text-gray-600" : "text-blue-900"
-                          }`}>
-                            {(() => {
-                              const classInfo = classes.find((c) => c._id === entry.class || c.id === entry.class);
-                              if (classInfo) {
-                                return `${classInfo.grade} - ${classInfo.subject}`;
-                              }
-                              return entry.subject ? `${entry.subject}` : "Unknown Class";
-                            })()}
-                          </h4>
-                          <div className={`flex items-center mt-1 text-xs ${
-                            classOver ? "text-gray-500" : "text-blue-700"
-                          }`}>
-                            <Clock className="w-3 h-3 mr-1" />
-                            {formatTime(entry.startTime)} -{" "}
-                            {formatTime(entry.endTime)}
+                <div className="space-y-2">
+                  {getClassesForDay(day).map((entry, index) => {
+                    const classDate = weekDates[dayIndex];
+                    const classOver = isClassOver(day, entry.endTime, classDate);
+                    return (
+                      <motion.div
+                        key={entry.id}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.3, delay: index * 0.1 }}
+                        className={`${
+                          classOver
+                            ? "bg-gray-50 border-l-4 border-gray-400"
+                            : "bg-blue-50 border-l-4 border-blue-400"
+                        } p-3 rounded-r-lg hover:${
+                          classOver ? "bg-gray-100" : "bg-blue-100"
+                        } transition-colors duration-200 group relative cursor-pointer`}
+                      >
+                        {/* Class Over Overlay */}
+                        {classOver && (
+                          <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                            Class Over
                           </div>
-                          {entry.location && (
+                        )}
+
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0 pr-16">
+                            <h4 className={`text-sm font-medium truncate ${
+                              classOver ? "text-gray-600" : "text-blue-900"
+                            }`}>
+                              {(() => {
+                                const classInfo = classes.find((c) => c._id === entry.class || c.id === entry.class);
+                                if (classInfo) {
+                                  return `${classInfo.grade} - ${classInfo.subject}`;
+                                }
+                                return entry.subject ? `${entry.subject}` : "Unknown Class";
+                              })()}
+                            </h4>
                             <div className={`flex items-center mt-1 text-xs ${
                               classOver ? "text-gray-500" : "text-blue-700"
                             }`}>
-                              <MapPin className="w-3 h-3 mr-1" />
-                              {entry.location}
+                              <Clock className="w-3 h-3 mr-1" />
+                              {formatTime(entry.startTime)} -{" "}
+                              {formatTime(entry.endTime)}
                             </div>
-                          )}
-                        </div>
-                        <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                          <button
-                            onClick={() => handleEdit(entry)}
-                            className={`p-1 ${
-                              classOver ? "text-gray-500 hover:text-gray-700" : "text-blue-600 hover:text-blue-800"
-                            }`}
-                          >
-                            <Edit3 className="w-3 h-3" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(entry.id)}
-                            disabled={processingId === entry.id}
-                            className="p-1 text-red-600 hover:text-red-800 disabled:opacity-50"
-                          >
-                            {processingId === entry.id ? (
-                              <LoadingSpinner size="sm" message="" />
-                            ) : (
-                              <Trash2 className="w-3 h-3" />
+                            {entry.location && (
+                              <div className={`flex items-center mt-1 text-xs ${
+                                classOver ? "text-gray-500" : "text-blue-700"
+                              }`}>
+                                <MapPin className="w-3 h-3 mr-1" />
+                                {entry.location}
+                              </div>
                             )}
-                          </button>
+                          </div>
+                          <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <button
+                              onClick={() => handleEdit(entry)}
+                              className={`p-1 rounded hover:bg-white cursor-pointer ${
+                                classOver ? "text-gray-500 hover:text-gray-700" : "text-blue-600 hover:text-blue-800"
+                              }`}
+                            >
+                              <Edit3 className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(entry.id)}
+                              disabled={processingId === entry.id}
+                              className="p-1 rounded hover:bg-white text-red-600 hover:text-red-800 disabled:opacity-50 cursor-pointer"
+                            >
+                              {processingId === entry.id ? (
+                                <div className="w-3 h-3 border border-red-400 border-t-transparent rounded-full animate-spin"></div>
+                              ) : (
+                                <Trash2 className="w-3 h-3" />
+                              )}
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
+                      </motion.div>
+                    );
+                  })}
 
-                {getClassesForDay(day).length === 0 && (
-                  <div className="text-center py-8 text-gray-400">
-                    <Calendar className="w-8 h-8 mx-auto mb-2" />
-                    <p className="text-sm">No classes scheduled</p>
-                  </div>
-                )}
+                  {getClassesForDay(day).length === 0 && (
+                    <div className="text-center py-8 text-gray-400">
+                      <Calendar className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                      <p className="text-sm">No classes</p>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </motion.div>
 
       {/* Modal */}
