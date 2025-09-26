@@ -551,6 +551,81 @@ router.post('/materials', authenticateToken, requireRole(['teacher']), requireAp
   }
 });
 
+// Create study material with uploaded files (for multi-file uploads)
+router.post('/materials/create', authenticateToken, requireRole(['teacher']), requireApproval, async (req, res) => {
+  try {
+    const teacherId = req.user._id;
+    const { title, description, classId, subject, files } = req.body;
+
+    console.log('Received data:', { title, description, classId, subject, files });
+    console.log('Files type:', typeof files);
+    console.log('Files content:', JSON.stringify(files, null, 2));
+
+    if (!title || !subject || !files || files.length === 0) {
+      return res.status(400).json({ error: 'Title, subject, and files are required' });
+    }
+
+    // Parse files if they're sent as string
+    let parsedFiles;
+    try {
+      parsedFiles = typeof files === 'string' ? JSON.parse(files) : files;
+      console.log('Parsed files:', parsedFiles);
+      console.log('Parsed files type:', typeof parsedFiles);
+    } catch (parseError) {
+      console.log('Parse error:', parseError);
+      return res.status(400).json({ error: 'Invalid files format' });
+    }
+
+    // Create material data
+    const materialData = {
+      title,
+      description,
+      teacher: teacherId,
+      subject,
+      files: parsedFiles.map(file => ({
+        name: file.name,
+        url: file.url,
+        size: file.size,
+        type: file.type
+      }))
+    };
+
+    // Handle classId - could be ObjectId or grade string
+    if (classId) {
+      // Check if it's a valid ObjectId (24 hex characters)
+      if (/^[0-9a-fA-F]{24}$/.test(classId)) {
+        materialData.class = classId;
+      } else {
+        // It's a grade string like "11th", "12th"
+        materialData.grade = classId;
+      }
+    }
+
+    console.log('Final material data:', JSON.stringify(materialData, null, 2));
+
+    const studyMaterial = new StudyMaterial(materialData);
+    console.log('StudyMaterial object before save:', studyMaterial);
+
+    await studyMaterial.save();
+    console.log('StudyMaterial saved successfully');
+
+    // Only populate class if it exists
+    if (materialData.class) {
+      await studyMaterial.populate('class', 'name subject');
+    }
+    await studyMaterial.populate('teacher', 'name email');
+
+    res.status(201).json({
+      success: true,
+      data: studyMaterial,
+      message: 'Study material created successfully'
+    });
+  } catch (error) {
+    console.error('Create study material error:', error);
+    res.status(500).json({ error: 'Failed to create study material' });
+  }
+});
+
 // Get study materials uploaded by teacher
 router.get('/materials', authenticateToken, requireRole(['teacher']), requireApproval, async (req, res) => {
   try {

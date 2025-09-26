@@ -6,7 +6,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3006
 // Create axios instance
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 30000, // Increased to 30 seconds for file uploads
   headers: {
     'Content-Type': 'application/json',
   },
@@ -147,7 +147,7 @@ export const teacherAPI = {
   }),
 
   // Materials
-  uploadMaterial: (materialData) => api.post('/teacher/materials', materialData),
+  uploadMaterial: (materialData) => api.post('/teacher/materials/create', materialData),
   getMaterials: () => api.get('/teacher/materials'),
   deleteMaterial: (materialId) => api.delete(`/teacher/materials/${materialId}`),
 
@@ -185,12 +185,15 @@ export const commonAPI = {
   uploadFile: (file, type = 'material') => {
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('type', type);
 
-    return api.post('/upload', formData, {
+    // Use the correct upload endpoint based on type
+    const endpoint = type === 'material' ? '/upload/study-material' : '/upload/file';
+
+    return api.post(endpoint, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
+      timeout: 60000, // 60 seconds for file uploads
     });
   },
 };

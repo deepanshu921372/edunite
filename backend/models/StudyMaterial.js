@@ -9,7 +9,11 @@ const studyMaterialSchema = new mongoose.Schema({
   class: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Class',
-    required: true
+    required: false
+  },
+  grade: {
+    type: String,
+    required: false
   },
   teacher: {
     type: mongoose.Schema.Types.ObjectId,
@@ -20,19 +24,21 @@ const studyMaterialSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  fileUrl: {
-    type: String,
-    required: true
-  },
-  fileName: {
-    type: String,
-    required: true
-  },
-  fileType: {
-    type: String,
-    required: true
-  },
+  // Support for single file (backward compatibility)
+  fileUrl: String,
+  fileName: String,
+  fileType: String,
   fileSize: Number,
+  // Support for multiple files
+  files: {
+    type: [{
+      name: { type: String },
+      url: { type: String },
+      size: { type: Number },
+      type: { type: String }
+    }],
+    default: []
+  },
   uploadedAt: {
     type: Date,
     default: Date.now

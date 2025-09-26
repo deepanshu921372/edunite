@@ -76,7 +76,9 @@ const MaterialsManagement = () => {
           teacherAPI.getProfile(),
         ]);
 
-      setMaterials(materialsResponse.data || materialsResponse || []);
+      console.log("Materials response:", materialsResponse);
+      console.log("Materials data:", materialsResponse.studyMaterials);
+      setMaterials(materialsResponse.studyMaterials || materialsResponse.data || materialsResponse || []);
       setClasses(classesResponse.data || classesResponse || []);
       setTeacherProfile(profileResponse.data || profileResponse || null);
     } catch (error) {
@@ -209,12 +211,17 @@ const MaterialsManagement = () => {
     try {
       // Upload each file
       const uploadedFiles = [];
-      for (const file of uploadForm.files) {
+      for (let i = 0; i < uploadForm.files.length; i++) {
+        const file = uploadForm.files[i];
+        console.log(`Uploading file ${i + 1}/${uploadForm.files.length}: ${file.name}`);
+
         const uploadResponse = await commonAPI.uploadFile(file, "material");
+        console.log('Upload response:', uploadResponse);
+
         uploadedFiles.push({
           name: file.name,
           size: file.size,
-          url: uploadResponse.data.url,
+          url: uploadResponse.file.url,
           type: getFileType(file.name),
         });
       }
@@ -235,7 +242,19 @@ const MaterialsManagement = () => {
       fetchData();
     } catch (error) {
       console.error("Error uploading materials:", error);
-      toast.error("Failed to upload materials");
+
+      // More specific error handling
+      if (error.code === 'ECONNABORTED') {
+        toast.error("Upload timeout - file may be too large or connection is slow");
+      } else if (error.response?.status === 413) {
+        toast.error("File too large - maximum size is 50MB");
+      } else if (error.response?.status === 400) {
+        toast.error(error.response?.data?.error || "Invalid file or missing data");
+      } else if (error.response?.status === 500) {
+        toast.error("Server error - please try again");
+      } else {
+        toast.error("Failed to upload materials");
+      }
     } finally {
       setUploading(false);
     }
@@ -356,7 +375,7 @@ const MaterialsManagement = () => {
           (Array.isArray(filteredMaterials) ? filteredMaterials : []).map(
             (material, index) => (
               <motion.div
-                key={material.id}
+                key={material._id || material.id || index}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
@@ -373,8 +392,10 @@ const MaterialsManagement = () => {
                       </p>
                       <div className="flex items-center text-xs text-gray-500">
                         <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full mr-2">
-                          {classes.find((c) => c.id === material.classId)
-                            ?.name || "Unknown Class"}
+                          {material.grade ||
+                           classes.find((c) => c.id === material.classId)?.name ||
+                           material.class?.name ||
+                           "Unknown Class"}
                         </span>
                         <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full">
                           {material.subject}
@@ -396,24 +417,24 @@ const MaterialsManagement = () => {
 
                   {/* Files List */}
                   <div className="space-y-2">
-                    {material.files.map((file, fileIndex) => (
+                    {(material.files || []).map((file, fileIndex) => (
                       <div
                         key={fileIndex}
                         className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
                       >
                         <div className="flex items-center flex-1 min-w-0">
-                          {getFileIcon(file.name)}
+                          {getFileIcon(file.name || file.fileName)}
                           <div className="ml-3 flex-1 min-w-0">
                             <p className="text-sm font-medium text-gray-900 truncate">
-                              {file.name}
+                              {file.name || file.fileName}
                             </p>
                             <p className="text-xs text-gray-500">
-                              {formatFileSize(file.size)}
+                              {formatFileSize(file.size || file.fileSize)}
                             </p>
                           </div>
                         </div>
                         <a
-                          href={file.url}
+                          href={file.url || file.fileUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="ml-2 p-1 text-blue-600 hover:text-blue-800"
@@ -422,6 +443,30 @@ const MaterialsManagement = () => {
                         </a>
                       </div>
                     ))}
+                    {/* Handle single file legacy format */}
+                    {!material.files && material.fileUrl && (
+                      <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                        <div className="flex items-center flex-1 min-w-0">
+                          {getFileIcon(material.fileName)}
+                          <div className="ml-3 flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {material.fileName}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {formatFileSize(material.fileSize)}
+                            </p>
+                          </div>
+                        </div>
+                        <a
+                          href={material.fileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="ml-2 p-1 text-blue-600 hover:text-blue-800"
+                        >
+                          <Download className="w-4 h-4" />
+                        </a>
+                      </div>
+                    )}
                   </div>
 
                   <div className="mt-4 pt-4 border-t border-gray-200 text-xs text-gray-500">
