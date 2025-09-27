@@ -56,7 +56,6 @@ const AttendanceManagement = () => {
     try {
       setError(null);
       const response = await teacherAPI.getMyClasses();
-      console.log('Classes response:', response);
 
       // Handle different response structures
       let classesData = [];
@@ -74,7 +73,6 @@ const AttendanceManagement = () => {
         toast.error('No classes found. Please create a class first.');
       }
     } catch (error) {
-      console.error('Error fetching classes:', error);
       setError('Failed to load classes. Please try again.');
       toast.error('Failed to load classes');
     }
@@ -89,7 +87,6 @@ const AttendanceManagement = () => {
     try {
       // Get the selected class info to understand grade and subject
       const selectedClassInfo = classes.find(c => (c.id || c._id) === selectedClass);
-      console.log('Selected class info:', selectedClassInfo);
   
       if (!selectedClassInfo) {
         throw new Error('Selected class not found');
@@ -101,14 +98,12 @@ const AttendanceManagement = () => {
   
       // If not found in direct properties, extract from class name
       if (selectedClassInfo?.name) {
-        console.log('Extracting grade and subject from class name:', selectedClassInfo.name);
   
         // Extract grade (handles formats like "11th", "12th", etc.)
         if (!grade) {
           const gradeMatch = selectedClassInfo.name.match(/(\d+)(?:th|st|nd|rd)?/i);
           if (gradeMatch) {
             grade = gradeMatch[1] + 'th';
-            console.log('Extracted grade:', grade);
           }
         }
   
@@ -118,19 +113,16 @@ const AttendanceManagement = () => {
           let subjectMatch = selectedClassInfo.name.match(/\d+(?:th|st|nd|rd)?\s+([^(]+)/i);
           if (subjectMatch) {
             subject = subjectMatch[1].trim();
-            console.log('Extracted subject from format 1:', subject);
           } else {
             // Format 2: "(Mathematics)" - extract from parentheses
             subjectMatch = selectedClassInfo.name.match(/\(([^)]+)\)/);
             if (subjectMatch) {
               subject = subjectMatch[1].trim();
-              console.log('Extracted subject from format 2:', subject);
             } else {
               // Format 3: Try to get everything after grade
               subjectMatch = selectedClassInfo.name.match(/\d+(?:th|st|nd|rd)?\s+(.+)/i);
               if (subjectMatch) {
                 subject = subjectMatch[1].trim();
-                console.log('Extracted subject from format 3:', subject);
               }
             }
           }
@@ -140,75 +132,52 @@ const AttendanceManagement = () => {
       // Handle specific cases from your data structure
       if (selectedClassInfo?.subjects && Array.isArray(selectedClassInfo.subjects) && selectedClassInfo.subjects.length > 0) {
         subject = selectedClassInfo.subjects[0]; // Take first subject
-        console.log('Using subject from subjects array:', subject);
       }
+
   
-      // Validate extracted values
-      if (!grade || !subject) {
-        console.warn('Could not extract grade or subject:', { grade, subject, selectedClassInfo });
-        console.log('Available class info keys:', Object.keys(selectedClassInfo || {}));
-      }
-  
-      console.log('Searching for students with grade:', grade, 'and subject:', subject);
   
       let studentsData = [];
   
       // IMPROVED APPROACH: Try backend endpoints that likely exist in your system
       try {
-        console.log('Fetching students using existing backend endpoints...');
         
         let allUsersResponse;
         let endpointUsed = '';
         
         // Method 1: Try to get students from class directly
         try {
-          console.log('Trying to get students from selected class...');
           allUsersResponse = await teacherAPI.getClassStudents(selectedClass);
           endpointUsed = 'class students';
-          console.log('✅ Successfully fetched students from class');
         } catch (classStudentsError) {
-          console.log('❌ Class students endpoint failed:', classStudentsError.response?.status);
           
           // Method 2: Try the teacher's existing getAllStudents endpoint but make sure it returns users, not classes
           try {
-            console.log('Trying teacher getAllStudents endpoint...');
             allUsersResponse = await teacherAPI.getAllStudents();
             endpointUsed = 'teacher/students';
-            console.log('✅ Successfully fetched from teacher/students endpoint');
           } catch (teacherStudentsError) {
-            console.log('❌ Teacher students endpoint failed:', teacherStudentsError.response?.status);
             
             // Method 3: Try admin endpoint with proper error handling
             try {
-              console.log('Trying admin users endpoint...');
               allUsersResponse = await adminAPI.getAllUsers();
               endpointUsed = 'admin/users';
-              console.log('✅ Successfully fetched from admin/users endpoint');
             } catch (adminError) {
-              console.log('❌ Admin endpoint failed (expected for teachers):', adminError.response?.status);
               
               // Method 4: Create a new endpoint call that should work
               try {
-                console.log('Trying direct MongoDB query approach...');
                 // This calls your backend to get all users from MongoDB users collection
                 allUsersResponse = await api.get('/auth/all-users', {
                   params: { role: 'student' }
                 });
                 endpointUsed = 'auth/all-users';
-                console.log('✅ Successfully fetched from auth/all-users endpoint');
               } catch (authUsersError) {
-                console.log('❌ Auth users endpoint failed:', authUsersError.response?.status);
                 
                 // Method 5: Try a general user listing endpoint
                 try {
-                  console.log('Trying general user listing...');
                   allUsersResponse = await api.get('/user/list', {
                     params: { type: 'student', grade: grade }
                   });
                   endpointUsed = 'user/list';
-                  console.log('✅ Successfully fetched from user/list endpoint');
                 } catch (userListError) {
-                  console.log('❌ User list endpoint failed:', userListError.response?.status);
                   
                   // Method 6: Backend might need a custom endpoint - suggest it to user
                   throw new Error(`No working user endpoints found. Your backend needs one of these endpoints:
@@ -225,8 +194,6 @@ const AttendanceManagement = () => {
           }
         }
   
-        console.log(`📡 Data fetched from: ${endpointUsed}`);
-        console.log('Raw API response:', allUsersResponse);
   
         // Process the response to extract users array
         let allUsers = [];
@@ -240,8 +207,6 @@ const AttendanceManagement = () => {
           allUsers = Array.isArray(allUsersResponse.students) ? allUsersResponse.students : [allUsersResponse.students];
         }
   
-        console.log(`📊 Total records fetched: ${allUsers.length}`);
-        console.log('Sample record structure:', allUsers[0]);
   
         // Validate that we have actual user objects, not class objects
         const validUsers = allUsers.filter(user => {
@@ -262,11 +227,8 @@ const AttendanceManagement = () => {
           return hasUserProperties && isNotClass;
         });
   
-        console.log(`📋 Valid user objects after filtering: ${validUsers.length}`);
   
-        if (validUsers.length === 0) {
-          console.error('❌ No valid user objects found in API response');
-          console.log('Sample record keys:', Object.keys(allUsers[0] || {}));
+        if (validUsers.length === 0) {        
 
           // Show user what the backend is actually returning
           setError(`Backend is not returning user objects. Instead got: ${Object.keys(allUsers[0] || {}).join(', ')}.
@@ -282,24 +244,14 @@ const AttendanceManagement = () => {
   
         // Filter for students with matching criteria
         const filteredStudents = validUsers.filter(user => {
-          console.log(`\n🔍 --- Checking user: ${user.name || user.email || 'Unknown'} ---`);
-          console.log('User role:', user.role);
-          console.log('User data:', {
-            grade: user.grade || user.profile?.grade,
-            subjects: user.subjects || user.profile?.subjects,
-            stream: user.stream || user.profile?.stream,
-            id: user._id || user.id
-          });
   
           // Step 1: Check if user is a student
           if (user.role !== 'student') {
-            console.log(`❌ Not a student - role: ${user.role || 'undefined'}`);
             return false;
           }
   
           // Step 2: Check if grade matches
           const studentGrade = user.profile?.grade || user.grade;
-          console.log(`📚 Checking grade: studentGrade="${studentGrade}" vs targetGrade="${grade}"`);
   
           // Normalize grade strings for comparison
           const normalizeGrade = (g) => {
@@ -320,15 +272,12 @@ const AttendanceManagement = () => {
                             String(studentGrade).toLowerCase() === String(grade).toLowerCase();
   
           if (!gradeMatch) {
-            console.log(`❌ Grade mismatch: "${studentGrade}" vs "${grade}"`);
             return false;
           }
-          console.log(`✅ Grade match: "${studentGrade}" matches "${grade}"`);
   
           // Step 3: Check if subject exists in student's subjects array
           if (subject) {
             const subjects = user.profile?.subjects || user.subjects || [];
-            console.log(`📖 Checking subjects for student ${user.name}:`, subjects, `Looking for: "${subject}"`);
   
             const subjectMatch = subjects.some(sub => {
               const subjectName = typeof sub === 'string' ? sub : (sub.name || sub.subject || sub);
@@ -337,27 +286,18 @@ const AttendanceManagement = () => {
   
               const match = normalizedSubject.includes(normalizedTargetSubject) ||
                            normalizedTargetSubject.includes(normalizedSubject) ||
-                           normalizedSubject === normalizedTargetSubject;
-  
-              if (match) {
-                console.log(`✅ Subject match found: "${subjectName}" matches "${subject}"`);
-              }
-  
+                           normalizedSubject === normalizedTargetSubject;  
               return match;
             });
   
             if (!subjectMatch) {
-              console.log(`❌ No subject match for "${subject}" in [${subjects.map(s => typeof s === 'string' ? s : s.name || s.subject || s).join(', ')}]`);
               return false;
             }
-            console.log(`✅ Subject match confirmed for "${subject}"`);
           }
   
-          console.log(`🎯 Student ${user.name} matches all criteria`);
           return true;
         });
   
-        console.log(`\n🎯 Found ${filteredStudents.length} matching students after filtering`);
   
         // Map to consistent structure
         studentsData = filteredStudents.map(student => ({
@@ -371,10 +311,8 @@ const AttendanceManagement = () => {
         }));
   
         if (studentsData.length > 0) {
-          toast.success(`Found ${studentsData.length} students for ${grade} grade in ${subject}`);
-          console.log('Final filtered students:', studentsData);
+          toast.success(`Found ${studentsData.length} students for ${grade} grade in ${subject}`);  
         } else {
-          console.log('No students found matching criteria');
           toast(`No students found for ${grade} grade studying ${subject}. 
                  Make sure students in your database have:
                  - role: "student"
@@ -391,7 +329,6 @@ const AttendanceManagement = () => {
         }
   
       } catch (error) {
-        console.error('Error fetching and filtering users:', error);
 
         // Reset students and attendance when there's an error
         setStudents([]);
@@ -451,7 +388,6 @@ const AttendanceManagement = () => {
       }
   
     } catch (error) {
-      console.error('Error fetching students:', error);
       setError(`Failed to load students: ${error.message}`);
       toast.error('Failed to load students for attendance');
       setStudents([]);
@@ -498,7 +434,6 @@ const AttendanceManagement = () => {
         });
       }
     } catch (error) {
-      console.error('Error fetching attendance history:', error);
       setError('Failed to load attendance history');
       toast.error('Failed to load attendance history');
     } finally {
@@ -517,7 +452,6 @@ const AttendanceManagement = () => {
           setLocation(`${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`);
         },
         (error) => {
-          console.warn('Error getting location:', error);
           setLocation('Location not available');
         }
       );
@@ -573,11 +507,7 @@ const AttendanceManagement = () => {
         attendanceData.coordinates = currentLocation;
       }
   
-      console.log('Submitting attendance data:', attendanceData);
-      console.log('Students array format:', attendanceData.students);
-  
       const response = await teacherAPI.markAttendance(attendanceData);
-      console.log('Attendance response:', response);
       
       toast.success('Attendance marked successfully!');
   
@@ -585,8 +515,6 @@ const AttendanceManagement = () => {
       // This allows teachers to modify if needed
   
     } catch (error) {
-      console.error('Error marking attendance:', error);
-      console.error('Error response:', error.response?.data);
       
       // Show specific error message from backend if available
       const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Failed to mark attendance';
