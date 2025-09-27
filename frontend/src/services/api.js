@@ -122,6 +122,12 @@ export const adminAPI = {
   updateClass: (classId, classData) => api.put(`/admin/classes/${classId}`, classData),
   deleteClass: (classId) => api.delete(`/admin/classes/${classId}`),
   assignTeacher: (classId, teacherId) => api.post(`/admin/classes/${classId}/assign-teacher`, { teacherId }),
+
+  // Attendance management
+  getAttendance: (params = {}) => api.get('/attendance', { params }),
+  getAttendanceStats: (params = {}) => api.get('/attendance/summary/date-range', { params }),
+  getStudentAttendance: (studentId, params = {}) => api.get(`/attendance/student/${studentId}`, { params }),
+  getClassAttendanceStats: (classId, params = {}) => api.get(`/attendance/class/${classId}/stats`, { params }),
 };
 
 // Teacher API

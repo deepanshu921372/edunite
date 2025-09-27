@@ -4,7 +4,8 @@ import {
   Users,
   UserCheck,
   GraduationCap,
-  Home
+  Home,
+  Calendar
 } from 'lucide-react';
 import DashboardLayout from '../../components/shared/DashboardLayout';
 
@@ -13,6 +14,7 @@ import AdminOverview from '../../components/admin/AdminOverview';
 import RequestsManagement from '../../components/admin/RequestsManagement';
 import TeachersManagement from '../../components/admin/TeachersManagement';
 import StudentsManagement from '../../components/admin/StudentsManagement';
+import AttendanceManagement from '../../components/admin/AttendanceManagement';
 
 const AdminDashboard = () => {
   const location = useLocation();
@@ -55,6 +57,12 @@ const AdminDashboard = () => {
       icon: GraduationCap,
       active: activeTab === 'students',
       onClick: () => navigate('/admin/students')
+    },
+    {
+      name: 'Attendance',
+      icon: Calendar,
+      active: activeTab === 'attendance',
+      onClick: () => navigate('/admin/attendance')
     }
   ];
 
@@ -63,7 +71,8 @@ const AdminDashboard = () => {
     dashboard: <AdminOverview />,
     requests: <RequestsManagement />,
     teachers: <TeachersManagement />,
-    students: <StudentsManagement />
+    students: <StudentsManagement />,
+    attendance: <AttendanceManagement />
   }), []);
 
   return (
@@ -78,6 +87,7 @@ const AdminDashboard = () => {
           <Route path="/requests" element={components.requests} />
           <Route path="/teachers" element={components.teachers} />
           <Route path="/students" element={components.students} />
+          <Route path="/attendance" element={components.attendance} />
         </Routes>
       </div>
     </DashboardLayout>
