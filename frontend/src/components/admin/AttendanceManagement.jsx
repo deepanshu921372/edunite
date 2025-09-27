@@ -318,7 +318,7 @@ const AttendanceManagement = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 p-4 md:p-6 lg:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header Section */}
         <motion.div
@@ -328,7 +328,7 @@ const AttendanceManagement = () => {
           className="text-center md:text-left"
         >
           <div className="flex items-center justify-center md:justify-start space-x-3 mb-4">
-            <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-3 rounded-xl shadow-lg">
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-3 rounded-xl shadow-lg hidden sm:block">
               <UserCheck className="w-8 h-8 text-white" />
             </div>
             <div>
@@ -350,11 +350,6 @@ const AttendanceManagement = () => {
           className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6"
         >
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-            <div className="flex items-center space-x-2">
-              <Filter className="w-5 h-5 text-gray-500" />
-              <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
-            </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Date Range */}
               <div className="space-y-2">
@@ -363,7 +358,7 @@ const AttendanceManagement = () => {
                   type="date"
                   value={selectedDateRange.startDate}
                   onChange={(e) => setSelectedDateRange(prev => ({ ...prev, startDate: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 cursor-pointer border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
 
@@ -373,7 +368,7 @@ const AttendanceManagement = () => {
                   type="date"
                   value={selectedDateRange.endDate}
                   onChange={(e) => setSelectedDateRange(prev => ({ ...prev, endDate: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 cursor-pointer border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
 
@@ -383,7 +378,7 @@ const AttendanceManagement = () => {
                 <select
                   value={selectedClass}
                   onChange={(e) => setSelectedClass(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 cursor-pointer border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option key="all-classes" value="">All Classes</option>
                   {classes.map((cls, idx) => (
@@ -403,7 +398,7 @@ const AttendanceManagement = () => {
                 <select
                   value={selectedTeacher}
                   onChange={(e) => setSelectedTeacher(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 cursor-pointer border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option key="all-teachers" value="">All Teachers</option>
                   {teachers.map(teacher => (
@@ -419,49 +414,35 @@ const AttendanceManagement = () => {
 
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {quickStats.map((stat, index) => (
             <motion.div
               key={stat.name}
-              initial={{ opacity: 0, y: 30, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{
-                duration: 0.6,
-                delay: index * 0.1,
-                type: "spring",
-                stiffness: 100
-              }}
-              whileHover={{
-                y: -5,
-                scale: 1.02,
-                transition: { duration: 0.2 }
-              }}
-              className={`bg-white rounded-2xl shadow-lg hover:shadow-xl ${stat.shadowColor} transition-all duration-300 cursor-pointer group overflow-hidden relative`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-300"
             >
-              <div className={`absolute inset-0 bg-gradient-to-br ${stat.bgColor} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
-
-              <div className="p-6 relative">
-                <div className="flex items-center justify-between mb-4">
-                  <div className={`${stat.bgLight} p-3 rounded-xl shadow-sm group-hover:shadow-md transition-shadow duration-300`}>
-                    <div className={stat.textColor}>
-                      {stat.icon}
-                    </div>
+              <div className="flex items-center justify-between mb-4">
+                <div className={`${stat.bgLight} p-3 rounded-xl`}>
+                  <div className={stat.textColor}>
+                    {stat.icon}
                   </div>
-                  {stat.growth && (
-                    <div className={`px-2 py-1 ${stat.bgLight} ${stat.textColor} text-xs font-semibold rounded-full`}>
-                      {stat.growth}
-                    </div>
-                  )}
                 </div>
+                {stat.growth && (
+                  <div className={`px-3 py-1 ${stat.bgLight} ${stat.textColor} text-xs font-medium rounded-full`}>
+                    {stat.growth}
+                  </div>
+                )}
+              </div>
 
-                <div className="space-y-2">
-                  <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
-                    {stat.name}
-                  </h3>
-                  <p className="text-2xl font-bold text-gray-900 group-hover:text-gray-800 transition-colors duration-300">
-                    {stat.value}
-                  </p>
-                </div>
+              <div className="space-y-1">
+                <h3 className="text-sm font-medium text-gray-600 uppercase tracking-wide">
+                  {stat.name}
+                </h3>
+                <p className="text-3xl font-bold text-gray-900">
+                  {stat.value}
+                </p>
               </div>
             </motion.div>
           ))}
@@ -478,7 +459,7 @@ const AttendanceManagement = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`py-4 px-2 border-b-2 font-medium text-sm flex items-center space-x-2 transition-colors duration-200 ${
+                  className={`py-4 px-2 border-b-2 cursor-pointer font-medium text-sm flex items-center space-x-2 transition-colors duration-200 ${
                     activeTab === tab.id
                       ? 'border-blue-500 text-blue-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
