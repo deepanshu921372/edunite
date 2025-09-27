@@ -78,6 +78,134 @@ const AttendanceManagement = () => {
     }
   };
 
+  const extractExistingAttendance = (attendanceResponse) => {
+    console.log('Processing attendance response:', attendanceResponse);
+    
+    let existingAttendance = {};
+    
+    // Handle different response formats
+    let attendanceData = null;
+    
+    if (attendanceResponse?.existingAttendance) {
+      attendanceData = attendanceResponse.existingAttendance;
+    } else if (attendanceResponse?.data?.existingAttendance) {
+      attendanceData = attendanceResponse.data.existingAttendance;
+    } else if (attendanceResponse?.attendance) {
+      attendanceData = attendanceResponse.attendance;
+    } else if (attendanceResponse?.data?.attendance) {
+      attendanceData = attendanceResponse.data.attendance;
+    }
+  
+    console.log('Extracted attendance data:', attendanceData);
+  
+    if (attendanceData?.students && Array.isArray(attendanceData.students)) {
+      console.log('Processing students attendance array:', attendanceData.students);
+      
+      attendanceData.students.forEach((record, index) => {
+        console.log(`Processing attendance record ${index}:`, record);
+        
+        // Handle different student ID formats
+        let studentId = null;
+        if (record.student) {
+          if (typeof record.student === 'string') {
+            studentId = record.student;
+          } else if (record.student._id) {
+            studentId = record.student._id;
+          } else if (record.student.id) {
+            studentId = record.student.id;
+          }
+        } else if (record.studentId) {
+          studentId = record.studentId;
+        } else if (record._id) {
+          studentId = record._id;
+        }
+  
+        const status = record.status || record.attendanceStatus || 'present';
+        
+        if (studentId) {
+          existingAttendance[studentId] = status;
+          console.log(`Mapped attendance: ${studentId} -> ${status}`);
+        } else {
+          console.warn('Could not extract student ID from record:', record);
+        }
+      });
+    } else {
+      console.log('No students array found in attendance data or invalid format');
+    }
+  
+    console.log('Final existing attendance mapping:', existingAttendance);
+    return existingAttendance;
+  };
+  
+  // Alternative method: Try to fetch attendance using multiple approaches
+  const fetchExistingAttendanceData = async (classId, date) => {
+    const approaches = [
+      // Approach 1: Use the existing endpoint
+      async () => {
+        console.log('Trying approach 1: getStudentsForAttendance...');
+        const response = await teacherAPI.getStudentsForAttendance(classId, date);
+        return extractExistingAttendance(response);
+      },
+      
+      // Approach 2: Try attendance history endpoint
+      async () => {
+        console.log('Trying approach 2: getAttendanceHistory...');
+        const startDate = date;
+        const endDate = date;
+        const response = await teacherAPI.getAttendanceHistory(classId, startDate, endDate);
+        
+        if (response?.data && Array.isArray(response.data) && response.data.length > 0) {
+          // Find attendance record for the specific date
+          const targetDate = new Date(date).toDateString();
+          const attendanceRecord = response.data.find(record => {
+            const recordDate = new Date(record.date).toDateString();
+            return recordDate === targetDate;
+          });
+          
+          if (attendanceRecord) {
+            return extractExistingAttendance({ existingAttendance: attendanceRecord });
+          }
+        }
+        return {};
+      },
+      
+      // Approach 3: Direct API call to attendance endpoint
+      async () => {
+        console.log('Trying approach 3: direct attendance API...');
+        const response = await api.get('/teacher/attendance', {
+          params: {
+            classId: classId,
+            startDate: date,
+            endDate: date
+          }
+        });
+        
+        if (response?.attendance && Array.isArray(response.attendance) && response.attendance.length > 0) {
+          const attendanceRecord = response.attendance[0]; // Get the first (and should be only) record
+          return extractExistingAttendance({ existingAttendance: attendanceRecord });
+        }
+        return {};
+      }
+    ];
+  
+    // Try each approach until one succeeds
+    for (let i = 0; i < approaches.length; i++) {
+      try {
+        const result = await approaches[i]();
+        if (Object.keys(result).length > 0) {
+          console.log(`Approach ${i + 1} succeeded with result:`, result);
+          return result;
+        }
+        console.log(`Approach ${i + 1} returned empty result`);
+      } catch (error) {
+        console.warn(`Approach ${i + 1} failed:`, error);
+      }
+    }
+  
+    console.log('All approaches failed, returning empty attendance');
+    return {};
+  };
+
   const fetchStudentsForAttendance = async () => {
     if (!selectedClass || !selectedDate) return;
   
@@ -98,7 +226,6 @@ const AttendanceManagement = () => {
   
       // If not found in direct properties, extract from class name
       if (selectedClassInfo?.name) {
-  
         // Extract grade (handles formats like "11th", "12th", etc.)
         if (!grade) {
           const gradeMatch = selectedClassInfo.name.match(/(\d+)(?:th|st|nd|rd)?/i);
@@ -133,14 +260,11 @@ const AttendanceManagement = () => {
       if (selectedClassInfo?.subjects && Array.isArray(selectedClassInfo.subjects) && selectedClassInfo.subjects.length > 0) {
         subject = selectedClassInfo.subjects[0]; // Take first subject
       }
-
-  
   
       let studentsData = [];
   
       // IMPROVED APPROACH: Try backend endpoints that likely exist in your system
       try {
-        
         let allUsersResponse;
         let endpointUsed = '';
         
@@ -149,19 +273,16 @@ const AttendanceManagement = () => {
           allUsersResponse = await teacherAPI.getClassStudents(selectedClass);
           endpointUsed = 'class students';
         } catch (classStudentsError) {
-          
           // Method 2: Try the teacher's existing getAllStudents endpoint but make sure it returns users, not classes
           try {
             allUsersResponse = await teacherAPI.getAllStudents();
             endpointUsed = 'teacher/students';
           } catch (teacherStudentsError) {
-            
             // Method 3: Try admin endpoint with proper error handling
             try {
               allUsersResponse = await adminAPI.getAllUsers();
               endpointUsed = 'admin/users';
             } catch (adminError) {
-              
               // Method 4: Create a new endpoint call that should work
               try {
                 // This calls your backend to get all users from MongoDB users collection
@@ -170,7 +291,6 @@ const AttendanceManagement = () => {
                 });
                 endpointUsed = 'auth/all-users';
               } catch (authUsersError) {
-                
                 // Method 5: Try a general user listing endpoint
                 try {
                   allUsersResponse = await api.get('/user/list', {
@@ -178,7 +298,6 @@ const AttendanceManagement = () => {
                   });
                   endpointUsed = 'user/list';
                 } catch (userListError) {
-                  
                   // Method 6: Backend might need a custom endpoint - suggest it to user
                   throw new Error(`No working user endpoints found. Your backend needs one of these endpoints:
                     - GET /admin/users (returns all users)
@@ -194,7 +313,6 @@ const AttendanceManagement = () => {
           }
         }
   
-  
         // Process the response to extract users array
         let allUsers = [];
         if (allUsersResponse?.data) {
@@ -206,7 +324,6 @@ const AttendanceManagement = () => {
         } else if (allUsersResponse?.students) {
           allUsers = Array.isArray(allUsersResponse.students) ? allUsersResponse.students : [allUsersResponse.students];
         }
-  
   
         // Validate that we have actual user objects, not class objects
         const validUsers = allUsers.filter(user => {
@@ -227,24 +344,21 @@ const AttendanceManagement = () => {
           return hasUserProperties && isNotClass;
         });
   
-  
         if (validUsers.length === 0) {        
-
           // Show user what the backend is actually returning
           setError(`Backend is not returning user objects. Instead got: ${Object.keys(allUsers[0] || {}).join(', ')}.
                     Please check your backend ${endpointUsed} endpoint to ensure it returns user documents from your users collection.`);
-
+  
           // Reset students and attendance when no valid users found
           setStudents([]);
           setAttendance({});
-
+  
           toast.error('No Student found for this Class');
           return;
         }
   
         // Filter for students with matching criteria
         const filteredStudents = validUsers.filter(user => {
-  
           // Step 1: Check if user is a student
           if (user.role !== 'student') {
             return false;
@@ -298,7 +412,6 @@ const AttendanceManagement = () => {
           return true;
         });
   
-  
         // Map to consistent structure
         studentsData = filteredStudents.map(student => ({
           id: student._id || student.id,
@@ -307,7 +420,7 @@ const AttendanceManagement = () => {
           rollNumber: student.profile?.rollNumber || student.rollNumber || '',
           grade: student.profile?.grade || student.grade,
           subjects: student.profile?.subjects || student.subjects || [],
-          attendanceStatus: 'present'
+          attendanceStatus: 'present' // Default status, will be overridden by existing attendance
         }));
   
         if (studentsData.length > 0) {
@@ -329,11 +442,10 @@ const AttendanceManagement = () => {
         }
   
       } catch (error) {
-
         // Reset students and attendance when there's an error
         setStudents([]);
         setAttendance({});
-
+  
         // Show appropriate error message based on the specific error
         if (error.message.includes('No working user endpoints')) {
           setError(error.message);
@@ -367,11 +479,20 @@ const AttendanceManagement = () => {
   
       setStudents(processedStudents);
   
-      // Initialize attendance state
+      // CRITICAL FIX: Fetch existing attendance from database for this class and date
+      console.log('Fetching existing attendance for class:', selectedClass, 'date:', selectedDate);
+      const existingAttendance = await fetchExistingAttendanceData(selectedClass, selectedDate);
+  
+      // Initialize attendance state with existing data or defaults
       const initialAttendance = {};
       processedStudents.forEach(student => {
-        initialAttendance[student.id] = student.attendanceStatus;
+        // Use existing attendance status if available, otherwise default to 'present'
+        const existingStatus = existingAttendance[student.id];
+        initialAttendance[student.id] = existingStatus || student.attendanceStatus || 'present';
+        
+        console.log(`🎯 Final attendance for ${student.name}: ${initialAttendance[student.id]} ${existingStatus ? '(from DB)' : '(default)'}`);
       });
+      
       setAttendance(initialAttendance);
   
       if (processedStudents.length === 0) {
@@ -385,9 +506,13 @@ const AttendanceManagement = () => {
             color: '#fff',
           },
         });
+      } else {
+        // Show info about loaded attendance
+        const existingCount = Object.keys(existingAttendance).length;
       }
   
     } catch (error) {
+      console.error('Error fetching students:', error);
       setError(`Failed to load students: ${error.message}`);
       toast.error('Failed to load students for attendance');
       setStudents([]);
