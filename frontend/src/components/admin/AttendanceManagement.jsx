@@ -39,7 +39,6 @@ const AttendanceManagement = () => {
 
     // Set up auto-refresh every 5 minutes (300000ms)
     const autoRefreshInterval = setInterval(() => {
-      console.log('Auto-refreshing attendance data...');
       fetchAttendanceData();
     }, 300000);
 
@@ -49,7 +48,6 @@ const AttendanceManagement = () => {
 
   useEffect(() => {
     if (classes.length > 0 || teachers.length > 0) {
-      console.log('Fetching attendance data due to filter change...');
       fetchAttendanceData();
     }
   }, [selectedDateRange, selectedClass, selectedTeacher]);
@@ -74,22 +72,14 @@ const AttendanceManagement = () => {
       setTeachers(teachersList);
       setClasses(allClasses);
 
-      console.log('Loaded data:', {
-        students: studentsList.length,
-        teachers: teachersList.length,
-        classes: allClasses.length
-      });
-
       // Immediately fetch attendance data after loading initial data
       if (studentsList.length > 0 || teachersList.length > 0 || allClasses.length > 0) {
-        console.log('Initial data loaded, now fetching attendance data...');
         setTimeout(() => {
           fetchAttendanceData();
         }, 100); // Small delay to ensure state is updated
       }
     } catch (error) {
       console.error('Error fetching initial data:', error);
-      showToast('Failed to load initial data', 'error');
     } finally {
       setLoading(false);
     }
@@ -106,8 +96,6 @@ const AttendanceManagement = () => {
       if (selectedClass) params.classId = selectedClass;
       if (selectedTeacher) params.teacherId = selectedTeacher;
 
-      console.log('🔄 Fetching attendance with params:', params);
-      console.log('📅 Date range:', selectedDateRange.startDate, 'to', selectedDateRange.endDate);
 
       // Try to get attendance data - if admin endpoint fails, try general endpoint
       let response;
@@ -120,60 +108,23 @@ const AttendanceManagement = () => {
         response = await api.get('/attendance', { params });
       }
 
-      console.log('📦 Raw attendance response:', response);
-
       // Handle different response formats
       let attendanceArray = [];
 
       if (response.attendance) {
         attendanceArray = response.attendance;
-        console.log('✅ Found attendance in response.attendance');
       } else if (response.data?.attendance) {
         attendanceArray = response.data.attendance;
-        console.log('✅ Found attendance in response.data.attendance');
       } else if (Array.isArray(response)) {
         attendanceArray = response;
-        console.log('✅ Response is array itself');
       } else if (Array.isArray(response.data)) {
         attendanceArray = response.data;
-        console.log('✅ Found attendance in response.data array');
-      } else {
-        console.log('❌ No attendance data found in expected locations');
-        console.log('📋 Response structure:', Object.keys(response));
       }
-
-      console.log('📊 Processed attendance data:', attendanceArray);
-      console.log('📈 Attendance count:', attendanceArray.length);
 
       setAttendanceData(attendanceArray);
 
-      if (attendanceArray.length === 0) {
-        console.log('⚠️  No attendance data found');
-        console.log('🔍 Debugging info:');
-        console.log('   - Students loaded:', students.length);
-        console.log('   - Teachers loaded:', teachers.length);
-        console.log('   - Classes loaded:', classes.length);
-        console.log('   - Date range:', params.startDate, 'to', params.endDate);
-
-        // Try to show more helpful message
-        showToast('No attendance records found. Teachers may need to mark attendance first.', 'info');
-      } else {
-        console.log('✅ Successfully loaded attendance data');
-      }
     } catch (error) {
-      console.error('❌ Error fetching attendance data:', error);
-      console.error('📋 Error details:', error.response?.data || error.message);
-      console.error('🌐 Error status:', error.response?.status);
-      console.error('🔗 Error config:', error.config);
-
-      if (error.response?.status === 404) {
-        showToast('Attendance endpoint not found. Please check your backend configuration.', 'error');
-      } else if (error.response?.status === 403) {
-        showToast('Access denied. Please check your admin permissions.', 'error');
-      } else {
-        showToast('Failed to load attendance data. Check console for details.', 'error');
-      }
-
+      console.error('Error fetching attendance data:', error);
       // Set empty array on error to show "no data" message
       setAttendanceData([]);
     }
