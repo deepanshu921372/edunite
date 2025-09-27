@@ -139,8 +139,19 @@ export const teacherAPI = {
   updateTimetableEntry: (entryId, entryData) => api.put(`/teacher/timetable/${entryId}`, entryData),
   deleteTimetableEntry: (entryId) => api.delete(`/teacher/timetable/${entryId}`),
 
-  // Attendance
+  // Attendance - Updated methods
   getStudentsForAttendance: (classId, date) => api.get(`/teacher/attendance/students`, { params: { classId, date } }),
+  getClassStudents: (classId) => api.get(`/teacher/classes/${classId}/students`),
+  getStudentsByGrade: (grade) => api.get(`/teacher/students/grade/${grade}`),
+  getStudentsByGradeAndSubject: (grade, subject) => api.get(`/teacher/students/by-grade-subject`, { params: { grade, subject } }),
+  getAllStudents: () => api.get('/teacher/students'),
+  
+  // New improved methods for getting users
+  getAllUsersForFiltering: () => api.get('/admin/users'),
+  getTeacherUsers: () => api.get('/teacher/users'),
+  getAuthUsers: () => api.get('/auth/users'),
+  getFilteredUsers: (params) => api.get('/users', { params }),
+  
   markAttendance: (attendanceData) => api.post('/teacher/attendance', attendanceData),
   getAttendanceHistory: (classId, startDate, endDate) => api.get(`/teacher/attendance/history`, {
     params: { classId, startDate, endDate }
@@ -198,4 +209,6 @@ export const commonAPI = {
   },
 };
 
+// Export the api instance as well for direct use
+export { api };
 export default api;

@@ -820,25 +820,155 @@ router.get('/attendance-summary/:classId', authenticateToken, requireRole(['teac
   }
 });
 
-// Get students in teacher's classes
+// CORRECTED STUDENT ENDPOINTS - Fixed duplicate routes and middleware
+
+// Get students in teacher's classes (UPDATED - Returns actual users, not classes)
 router.get('/students', authenticateToken, requireRole(['teacher']), requireApproval, async (req, res) => {
   try {
     const teacherId = req.user._id;
-    const { classId } = req.query;
 
-    const filter = { teacher: teacherId };
-    if (classId) {
-      filter._id = classId;
+    // Get all students, not classes
+    const students = await User.find({ role: 'student' })
+      .select('-password')
+      .lean(); // Use lean() for better performance
+
+    console.log('Debug - Total students found:', students.length);
+    if (students.length > 0) {
+      console.log('Sample student structure:', students[0]);
+      console.log('Student fields:', Object.keys(students[0]));
     }
 
-    const classes = await Class.find(filter)
-      .populate('students', 'name email profile')
-      .select('name subject students');
-
-    res.json(classes);
+    res.json({
+      success: true,
+      data: students
+    });
   } catch (error) {
     console.error('Get teacher students error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ 
+      success: false,
+      error: 'Internal server error' 
+    });
+  }
+});
+
+// Get all students (alternative endpoint)
+router.get('/all-students', authenticateToken, requireRole(['teacher']), requireApproval, async (req, res) => {
+  try {
+    // Get all users with role 'student' from your MongoDB users collection
+    const students = await User.find({ role: 'student' }).select('-password');
+    
+    console.log('Returning students:', students.length);
+    console.log('Sample student:', students[0]); // Should have name, email, role, grade, subjects
+    
+    res.json({
+      success: true,
+      data: students
+    });
+  } catch (error) {
+    console.error('Error fetching students:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to fetch students' 
+    });
+  }
+});
+
+// Get students by class
+router.get('/classes/:classId/students', authenticateToken, requireRole(['teacher']), requireApproval, async (req, res) => {
+  try {
+    const { classId } = req.params;
+    const teacherId = req.user._id;
+    
+    // Get the class first to understand its grade and subjects
+    const classInfo = await Class.findOne({ 
+      _id: classId, 
+      teacher: teacherId // Ensure teacher owns this class
+    });
+    
+    if (!classInfo) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Class not found or not authorized' 
+      });
+    }
+    
+    // Find students matching this class's grade and subjects
+    const students = await User.find({
+      role: 'student',
+      $or: [
+        { grade: classInfo.grade },
+        { 'profile.grade': classInfo.grade }
+      ]
+    }).select('-password');
+    
+    // Further filter by subjects if needed
+    const filteredStudents = students.filter(student => {
+      const studentSubjects = student.subjects || student.profile?.subjects || [];
+      const classSubjects = classInfo.subjects || [classInfo.subject];
+      
+      return classSubjects.some(classSubject => 
+        studentSubjects.some(studentSubject => 
+          typeof studentSubject === 'string' 
+            ? studentSubject.toLowerCase().includes(classSubject.toLowerCase())
+            : (studentSubject.name || studentSubject.subject || '').toLowerCase().includes(classSubject.toLowerCase())
+        )
+      );
+    });
+    
+    res.json({
+      success: true,
+      data: filteredStudents
+    });
+  } catch (error) {
+    console.error('Error fetching class students:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to fetch class students' 
+    });
+  }
+});
+
+// Alternative route to get all users with role filter
+router.get('/all-users', authenticateToken, requireRole(['teacher']), requireApproval, async (req, res) => {
+  try {
+    const { role } = req.query;
+    
+    let query = {};
+    if (role) {
+      query.role = role;
+    }
+    
+    const users = await User.find(query).select('-password');
+    
+    res.json({
+      success: true,
+      data: users
+    });
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to fetch users' 
+    });
+  }
+});
+
+// Debugging endpoint to check what your current endpoints return
+router.get('/debug/students', authenticateToken, requireRole(['teacher']), requireApproval, async (req, res) => {
+  try {
+    const students = await User.find({ role: 'student' }).limit(5);
+    console.log('Debug - Found students:', students);
+    
+    res.json({
+      success: true,
+      message: 'Debug info',
+      totalStudents: await User.countDocuments({ role: 'student' }),
+      sampleStudent: students[0],
+      studentFields: students[0] ? Object.keys(students[0].toObject()) : [],
+      allUsers: await User.find({}).limit(3).select('name email role') // Check all users
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
