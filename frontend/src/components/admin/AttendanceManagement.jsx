@@ -26,20 +26,30 @@ const AttendanceManagement = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDateRange, setSelectedDateRange] = useState({
-    startDate: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 year ago
-    endDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0] // Tomorrow
+    startDate: new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 2 years ago
+    endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 1 week from now
   });
   const [selectedClass, setSelectedClass] = useState('');
   const [selectedTeacher, setSelectedTeacher] = useState('');
-  const [activeTab, setActiveTab] = useState('overview'); // overview, students, teachers
+  const [activeTab, setActiveTab] = useState('students'); // students, teachers (overview removed)
   const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     fetchInitialData();
+
+    // Set up auto-refresh every 5 minutes (300000ms)
+    const autoRefreshInterval = setInterval(() => {
+      console.log('Auto-refreshing attendance data...');
+      fetchAttendanceData();
+    }, 300000);
+
+    // Cleanup interval on component unmount
+    return () => clearInterval(autoRefreshInterval);
   }, []);
 
   useEffect(() => {
     if (classes.length > 0 || teachers.length > 0) {
+      console.log('Fetching attendance data due to filter change...');
       fetchAttendanceData();
     }
   }, [selectedDateRange, selectedClass, selectedTeacher]);
@@ -69,6 +79,14 @@ const AttendanceManagement = () => {
         teachers: teachersList.length,
         classes: allClasses.length
       });
+
+      // Immediately fetch attendance data after loading initial data
+      if (studentsList.length > 0 || teachersList.length > 0 || allClasses.length > 0) {
+        console.log('Initial data loaded, now fetching attendance data...');
+        setTimeout(() => {
+          fetchAttendanceData();
+        }, 100); // Small delay to ensure state is updated
+      }
     } catch (error) {
       console.error('Error fetching initial data:', error);
       showToast('Failed to load initial data', 'error');
@@ -82,13 +100,14 @@ const AttendanceManagement = () => {
       const params = {
         startDate: selectedDateRange.startDate,
         endDate: selectedDateRange.endDate,
-        limit: 100 // Get more records for admin
+        limit: 1000 // Increase limit to get more records
       };
 
       if (selectedClass) params.classId = selectedClass;
       if (selectedTeacher) params.teacherId = selectedTeacher;
 
-      console.log('Fetching attendance with params:', params);
+      console.log('🔄 Fetching attendance with params:', params);
+      console.log('📅 Date range:', selectedDateRange.startDate, 'to', selectedDateRange.endDate);
 
       // Try to get attendance data - if admin endpoint fails, try general endpoint
       let response;
@@ -101,33 +120,60 @@ const AttendanceManagement = () => {
         response = await api.get('/attendance', { params });
       }
 
-      console.log('Raw attendance response:', response);
+      console.log('📦 Raw attendance response:', response);
 
       // Handle different response formats
       let attendanceArray = [];
 
       if (response.attendance) {
         attendanceArray = response.attendance;
+        console.log('✅ Found attendance in response.attendance');
       } else if (response.data?.attendance) {
         attendanceArray = response.data.attendance;
+        console.log('✅ Found attendance in response.data.attendance');
       } else if (Array.isArray(response)) {
         attendanceArray = response;
+        console.log('✅ Response is array itself');
       } else if (Array.isArray(response.data)) {
         attendanceArray = response.data;
+        console.log('✅ Found attendance in response.data array');
+      } else {
+        console.log('❌ No attendance data found in expected locations');
+        console.log('📋 Response structure:', Object.keys(response));
       }
 
-      console.log('Processed attendance data:', attendanceArray);
-      console.log('Attendance count:', attendanceArray.length);
+      console.log('📊 Processed attendance data:', attendanceArray);
+      console.log('📈 Attendance count:', attendanceArray.length);
 
       setAttendanceData(attendanceArray);
 
       if (attendanceArray.length === 0) {
-        console.log('No attendance data found - this might be normal if no attendance has been marked yet');
+        console.log('⚠️  No attendance data found');
+        console.log('🔍 Debugging info:');
+        console.log('   - Students loaded:', students.length);
+        console.log('   - Teachers loaded:', teachers.length);
+        console.log('   - Classes loaded:', classes.length);
+        console.log('   - Date range:', params.startDate, 'to', params.endDate);
+
+        // Try to show more helpful message
+        showToast('No attendance records found. Teachers may need to mark attendance first.', 'info');
+      } else {
+        console.log('✅ Successfully loaded attendance data');
       }
     } catch (error) {
-      console.error('Error fetching attendance data:', error);
-      console.error('Error details:', error.response?.data || error.message);
-      showToast('Failed to load attendance data', 'error');
+      console.error('❌ Error fetching attendance data:', error);
+      console.error('📋 Error details:', error.response?.data || error.message);
+      console.error('🌐 Error status:', error.response?.status);
+      console.error('🔗 Error config:', error.config);
+
+      if (error.response?.status === 404) {
+        showToast('Attendance endpoint not found. Please check your backend configuration.', 'error');
+      } else if (error.response?.status === 403) {
+        showToast('Access denied. Please check your admin permissions.', 'error');
+      } else {
+        showToast('Failed to load attendance data. Check console for details.', 'error');
+      }
+
       // Set empty array on error to show "no data" message
       setAttendanceData([]);
     }
@@ -420,32 +466,6 @@ const AttendanceManagement = () => {
           </div>
         </motion.div>
 
-        {/* Debug Info - Only show in development */}
-        {process.env.NODE_ENV === 'development' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4"
-          >
-            <h3 className="text-sm font-semibold text-yellow-800 mb-2">Debug Info</h3>
-            <div className="text-xs text-yellow-700 space-y-1">
-              <p>Students loaded: {students.length}</p>
-              <p>Teachers loaded: {teachers.length}</p>
-              <p>Classes loaded: {classes.length}</p>
-              <p>Attendance records: {attendanceData.length}</p>
-              <p>Date range: {selectedDateRange.startDate} to {selectedDateRange.endDate}</p>
-              <p>Selected class: {selectedClass || 'All'}</p>
-              <p>Selected teacher: {selectedTeacher || 'All'}</p>
-              <button
-                onClick={fetchAttendanceData}
-                className="mt-2 px-3 py-1 bg-yellow-200 text-yellow-800 rounded text-xs hover:bg-yellow-300"
-              >
-                Refresh Attendance Data
-              </button>
-            </div>
-          </motion.div>
-        )}
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -501,7 +521,6 @@ const AttendanceManagement = () => {
           <div className="border-b border-gray-200">
             <nav className="flex space-x-8 px-6">
               {[
-                { id: 'overview', name: 'Overview', icon: BarChart3 },
                 { id: 'students', name: 'Student Attendance', icon: GraduationCap },
                 { id: 'teachers', name: 'Teacher Attendance', icon: Users }
               ].map((tab) => (
@@ -522,91 +541,6 @@ const AttendanceManagement = () => {
           </div>
 
           <div className="p-6">
-            {activeTab === 'overview' && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="space-y-6"
-              >
-                {attendanceData.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Calendar className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">No attendance data found</h3>
-                    <p className="text-gray-600 mb-4">No attendance records found for the selected filters.</p>
-                    <div className="text-sm text-gray-500 space-y-2">
-                      <p>This could be because:</p>
-                      <ul className="list-disc text-left inline-block space-y-1">
-                        <li>No attendance has been marked yet by any teachers</li>
-                        <li>The selected date range contains no records</li>
-                        <li>The selected filters are too restrictive</li>
-                        <li>There may be a connectivity issue</li>
-                      </ul>
-                      <p className="mt-4">
-                        <strong>To get attendance data:</strong><br/>
-                        1. Teachers need to mark attendance for their classes<br/>
-                        2. Try expanding the date range (currently set to 1 year)<br/>
-                        3. Remove any class/teacher filters<br/>
-                        4. Check the Network tab for API errors
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-900">Recent Attendance Sessions</h3>
-                    <div className="grid gap-4">
-                      {attendanceData.slice(0, 10).map((session, index) => {
-                        const presentCount = session.students ? session.students.filter(s => s.status === 'present').length : 0;
-                        const totalCount = session.students ? session.students.length : 0;
-                        const percentage = totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 0;
-
-                        return (
-                          <motion.div
-                            key={session._id}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.1 }}
-                            className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors duration-200"
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-4">
-                                <div className="bg-blue-100 p-2 rounded-lg">
-                                  <Calendar className="w-5 h-5 text-blue-600" />
-                                </div>
-                                <div>
-                                  <h4 className="font-semibold text-gray-900">
-                                    {session.class?.name || 'Unknown Class'} - {session.class?.subject || 'Unknown Subject'}
-                                  </h4>
-                                  <p className="text-sm text-gray-600">
-                                    Teacher: {session.teacher?.name || 'Unknown Teacher'}
-                                  </p>
-                                  <p className="text-xs text-gray-500">
-                                    {new Date(session.date).toLocaleDateString()}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <div className="flex items-center space-x-2">
-                                  <UserCheck className="w-4 h-4 text-green-600" />
-                                  <span className="font-semibold text-green-600">
-                                    {presentCount}
-                                  </span>
-                                  <span className="text-gray-500">/</span>
-                                  <span className="text-gray-600">{totalCount}</span>
-                                </div>
-                                <p className="text-xs text-gray-500">
-                                  {percentage}% present
-                                </p>
-                              </div>
-                            </div>
-                          </motion.div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            )}
 
             {activeTab === 'students' && (
               <motion.div

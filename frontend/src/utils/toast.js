@@ -8,7 +8,24 @@ export const showToast = (message, type = 'error') => {
   if (toastCache.has(toastKey)) return;
 
   toastCache.add(toastKey);
-  toast[type](message);
+
+  // Handle different toast types properly for react-hot-toast
+  switch (type) {
+    case 'success':
+      toast.success(message);
+      break;
+    case 'error':
+      toast.error(message);
+      break;
+    case 'info':
+      toast(message, { icon: 'ℹ️' });
+      break;
+    case 'warning':
+      toast(message, { icon: '⚠️' });
+      break;
+    default:
+      toast.error(message);
+  }
 
   // Clear from cache after 3 seconds
   setTimeout(() => toastCache.delete(toastKey), 3000);
